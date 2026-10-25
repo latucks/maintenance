@@ -393,7 +393,7 @@
 
     <!-- MODAL: Tambah/Edit Perangkat -->
     <div id="modal-device" class="modal fixed inset-0 z-50 justify-center items-center p-4">
-        <div class="glass-panel w-full max-w-md p-6 rounded-xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="glass-panel w-full max-w-lg p-6 rounded-xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
             <button onclick="closeDeviceModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
                 <i class="fas fa-times"></i>
             </button>
@@ -406,24 +406,38 @@
                     <input type="date" id="device-date" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
                 </div>
 
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Nama Perangkat</label>
-                    <input type="text" id="device-name" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                <!-- Multiple Device Input Container -->
+                <div id="multiple-device-container" class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-gray-400">Daftar Perangkat & Kategori</label>
+                        <button type="button" onclick="addDeviceRow()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium">
+                            <i class="fas fa-plus-circle"></i> Tambah Baris Alat
+                        </button>
+                    </div>
+                    <div id="device-rows-list" class="space-y-2">
+                        <!-- Dynamic Rows Here -->
+                    </div>
                 </div>
-                
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Kategori</label>
-                    <select id="device-category" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
-                        <option value="" disabled selected>Pilih Kategori...</option>
-                        <option value="PC Broadcast">PC Broadcast</option>
-                        <option value="Graphics System">Graphics System</option>
-                        <option value="Replay Server">Replay Server</option>
-                        <option value="Video Server">Video Server</option>
-                        <option value="Sound Card">Sound Card</option>
-                        <option value="Network Switch">Network Switch</option>
-                        <option value="IO External">IO External</option>
-                        <option value="Non Kategori">Non Kategori</option>
-                    </select>
+
+                <div id="single-device-edit-fields" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Nama Perangkat</label>
+                        <input type="text" id="single-device-name" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Kategori</label>
+                        <select id="single-device-category" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                            <option value="PC Broadcast">PC Broadcast</option>
+                            <option value="Graphics System">Graphics System</option>
+                            <option value="Replay Server">Replay Server</option>
+                            <option value="Video Server">Video Server</option>
+                            <option value="Sound Card">Sound Card</option>
+                            <option value="Network Switch">Network Switch</option>
+                            <option value="IO External">IO External</option>
+                            <option value="Server">Server</option>
+                            <option value="Non Kategori">Non Kategori</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div>
@@ -533,7 +547,6 @@
             const titleEl = document.getElementById('header-title');
             if (titleEl) titleEl.innerText = titles[tabId] || 'IT BROADCAST 3TV';
 
-            // Auto close sidebar on mobile after choosing tab
             if (window.innerWidth < 768) {
                 const sidebar = document.getElementById('sidebar');
                 const overlay = document.getElementById('sidebar-overlay');
@@ -593,7 +606,7 @@
             document.getElementById('stat-mon').innerText = mon;
         }
 
-        // --- RENDER PERANGKAT (MENYESUAIKAN BULAN & TAHUN AKTIF) ---
+        // --- RENDER PERANGKAT ---
         function renderDevices() {
             const tbody = document.getElementById('device-table-body');
             const emptyState = document.getElementById('device-empty-state');
@@ -604,7 +617,7 @@
             tbody.innerHTML = '';
             
             const targetYear = activeDate.getFullYear();
-            const targetMonth = activeDate.getMonth(); // 0-11
+            const targetMonth = activeDate.getMonth();
 
             const filteredDevices = devices.filter(dev => {
                 const devDateStr = dev.date || getFormattedDate();
@@ -702,7 +715,7 @@
             });
         }
 
-        // --- EXPORT XLSX PROFESIONAL (Hanya data bulan aktif) ---
+        // --- EXPORT XLSX ---
         function exportToXLSX() {
             const targetYear = activeDate.getFullYear();
             const targetMonth = activeDate.getMonth();
@@ -743,14 +756,10 @@
             const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
 
             if (worksheet['A1']) {
-                worksheet['A1'].s = {
-                    font: { bold: true, sz: 14, color: { rgb: "2563EB" } }
-                };
+                worksheet['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "2563EB" } } };
             }
             if (worksheet['A2']) {
-                worksheet['A2'].s = {
-                    font: { italic: true, sz: 10, color: { rgb: "6B7280" } }
-                };
+                worksheet['A2'].s = { font: { italic: true, sz: 10, color: { rgb: "6B7280" } } };
             }
 
             worksheet['!autofilter'] = { ref: `A4:H${aoaData.length}` };
@@ -807,7 +816,7 @@
             XLSX.writeFile(workbook, `ITB3TV_DaftarAlat_${activeMonthStr.replace(' ', '_')}.xlsx`);
         }
 
-        // --- EXPORT PDF (Direct Download menggunakan jsPDF) ---
+        // --- EXPORT PDF ---
         function exportToPDF() {
             const targetYear = activeDate.getFullYear();
             const targetMonth = activeDate.getMonth();
@@ -825,17 +834,16 @@
             }
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape A4
+            const doc = new jsPDF('l', 'mm', 'a4');
 
-            // Header Title
             doc.setFont("helvetica", "bold");
             doc.setFontSize(16);
-            doc.setTextColor(37, 99, 235); // Blue
+            doc.setTextColor(37, 99, 235);
             doc.text("MAINTENANCE & MONITORING", 14, 15);
 
             doc.setFont("helvetica", "italic");
             doc.setFontSize(10);
-            doc.setTextColor(107, 114, 128); // Gray
+            doc.setTextColor(107, 114, 128);
             doc.text(`Periode Bulan: ${activeMonthStr} | Tanggal Cetak: ${getFormattedDate()}`, 14, 22);
 
             const tableRows = [];
@@ -875,12 +883,60 @@
             doc.save(`ITB3TV_DaftarAlat_${activeMonthStr.replace(' ', '_')}.pdf`);
         }
 
+        // --- MULTIPLE DEVICE ROWS HANDLING ---
+        function addDeviceRow(nameVal = '', catVal = '') {
+            const list = document.getElementById('device-rows-list');
+            const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+            
+            const div = document.createElement('div');
+            div.className = "flex items-center gap-2";
+            div.id = rowId;
+            div.innerHTML = `
+                <input type="text" placeholder="Nama Perangkat..." required value="${nameVal}" class="glass-input flex-1 px-3 py-2 rounded-lg text-sm row-name-input">
+                <select required class="glass-input w-40 px-3 py-2 rounded-lg text-sm row-cat-select">
+                    <option value="" disabled ${!catVal ? 'selected' : ''}>Pilih Kategori...</option>
+                    <option value="PC Broadcast" ${catVal === 'PC Broadcast' ? 'selected' : ''}>PC Broadcast</option>
+                    <option value="Graphics System" ${catVal === 'Graphics System' ? 'selected' : ''}>Graphics System</option>
+                    <option value="Replay Server" ${catVal === 'Replay Server' ? 'selected' : ''}>Replay Server</option>
+                    <option value="Video Server" ${catVal === 'Video Server' ? 'selected' : ''}>Video Server</option>
+                    <option value="Sound Card" ${catVal === 'Sound Card' ? 'selected' : ''}>Sound Card</option>
+                    <option value="Network Switch" ${catVal === 'Network Switch' ? 'selected' : ''}>Network Switch</option>
+                    <option value="IO External" ${catVal === 'IO External' ? 'selected' : ''}>IO External</option>
+                    <option value="Server" ${catVal === 'Server' ? 'selected' : ''}>Server</option>
+                    <option value="Non Kategori" ${catVal === 'Non Kategori' ? 'selected' : ''}>Non Kategori</option>
+                </select>
+                <button type="button" onclick="removeDeviceRow('${rowId}')" class="text-red-400 hover:text-red-300 px-2 py-1 text-sm"><i class="fas fa-trash"></i></button>
+            `;
+            list.appendChild(div);
+        }
+
+        function removeDeviceRow(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) {
+                const list = document.getElementById('device-rows-list');
+                if (list.children.length > 1) {
+                    row.remove();
+                } else {
+                    alert("Minimal harus ada 1 baris perangkat.");
+                }
+            }
+        }
+
         // --- DEVICE MODAL HANDLING ---
         function openDeviceModal() {
             document.getElementById('device-form').reset();
             document.getElementById('device-index').value = '';
-            document.getElementById('device-date').value = getFormattedDate(); // Default hari ini
+            document.getElementById('device-date').value = getFormattedDate();
             document.getElementById('device-modal-title').innerText = "Tambah Perangkat";
+            
+            document.getElementById('multiple-device-container').classList.remove('hidden');
+            document.getElementById('single-device-edit-fields').classList.add('hidden');
+            document.getElementById('single-device-name').removeAttribute('required');
+            document.getElementById('single-device-category').removeAttribute('required');
+
+            document.getElementById('device-rows-list').innerHTML = '';
+            addDeviceRow();
+
             document.getElementById('modal-device').classList.add('active');
         }
 
@@ -891,40 +947,63 @@
         document.getElementById('device-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const index = document.getElementById('device-index').value;
-            const devData = {
-                date: document.getElementById('device-date').value || getFormattedDate(),
-                name: document.getElementById('device-name').value,
-                category: document.getElementById('device-category').value,
-                location: document.getElementById('device-location').value,
-                crew: document.getElementById('device-crew').value,
-                status: document.getElementById('device-status').value,
-                taskDetail: document.getElementById('device-task').value
-            };
+            const dateVal = document.getElementById('device-date').value || getFormattedDate();
+            const locationVal = document.getElementById('device-location').value;
+            const crewVal = document.getElementById('device-crew').value;
+            const statusVal = document.getElementById('device-status').value;
+            const taskVal = document.getElementById('device-task').value;
 
             if (index === '') {
-                devices.push(devData);
-                maintenanceLogs.unshift({
-                    id: 'LOG-' + Date.now(),
-                    date: devData.date,
-                    type: 'TAMBAH',
-                    targetName: devData.name,
-                    location: devData.location,
-                    action: `Menambahkan perangkat baru (${devData.taskDetail})`,
-                    crew: devData.crew,
-                    status: devData.status
-                });
+                const nameInputs = document.querySelectorAll('.row-name-input');
+                const catSelects = document.querySelectorAll('.row-cat-select');
+
+                for (let i = 0; i < nameInputs.length; i++) {
+                    const name = nameInputs[i].value.trim();
+                    const category = catSelects[i].value;
+                    if (name && category) {
+                        const newDev = {
+                            date: dateVal,
+                            name: name,
+                            category: category,
+                            location: locationVal,
+                            crew: crewVal,
+                            status: statusVal,
+                            taskDetail: taskVal
+                        };
+                        devices.push(newDev);
+                        maintenanceLogs.unshift({
+                            id: 'LOG-' + Date.now() + '-' + i,
+                            date: dateVal,
+                            type: 'TAMBAH',
+                            targetName: name,
+                            location: locationVal,
+                            action: `Menambahkan perangkat baru (${taskVal})`,
+                            crew: crewVal,
+                            status: statusVal
+                        });
+                    }
+                }
             } else {
                 const idx = parseInt(index);
+                const devData = {
+                    date: dateVal,
+                    name: document.getElementById('single-device-name').value,
+                    category: document.getElementById('single-device-category').value,
+                    location: locationVal,
+                    crew: crewVal,
+                    status: statusVal,
+                    taskDetail: taskVal
+                };
                 devices[idx] = devData;
                 maintenanceLogs.unshift({
                     id: 'LOG-' + Date.now(),
-                    date: devData.date,
+                    date: dateVal,
                     type: 'EDIT',
                     targetName: devData.name,
                     location: devData.location,
-                    action: `Memperbarui data perangkat (${devData.taskDetail})`,
-                    crew: devData.crew,
-                    status: devData.status
+                    action: `Memperbarui data perangkat (${taskVal})`,
+                    crew: crewVal,
+                    status: statusVal
                 });
             }
             
@@ -938,13 +1017,19 @@
             const dev = devices[index];
             document.getElementById('device-index').value = index;
             document.getElementById('device-date').value = dev.date || getFormattedDate();
-            document.getElementById('device-name').value = dev.name;
-            document.getElementById('device-category').value = dev.category;
             document.getElementById('device-location').value = dev.location;
             document.getElementById('device-crew').value = dev.crew;
             document.getElementById('device-status').value = dev.status;
             document.getElementById('device-task').value = dev.taskDetail || '';
             
+            document.getElementById('multiple-device-container').classList.add('hidden');
+            document.getElementById('single-device-edit-fields').classList.remove('hidden');
+            document.getElementById('single-device-name').setAttribute('required', 'true');
+            document.getElementById('single-device-category').setAttribute('required', 'true');
+
+            document.getElementById('single-device-name').value = dev.name;
+            document.getElementById('single-device-category').value = dev.category;
+
             document.getElementById('device-modal-title').innerText = "Edit Perangkat";
             document.getElementById('modal-device').classList.add('active');
         }
