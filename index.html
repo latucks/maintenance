@@ -11,10 +11,6 @@
     <!-- jsPDF & AutoTable Library untuk Export PDF Profesional -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    
-    <!-- Firebase App & Cloud Firestore SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <style>
         body {
@@ -138,7 +134,7 @@
             </div>
             <div class="flex items-center gap-3">
                 <div id="sync-status" class="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud & Local Sync
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync Active
                 </div>
                 <button onclick="openDeviceModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 md:px-4 py-2 rounded-lg shadow transition-colors flex items-center gap-2 text-xs md:text-sm font-medium shrink-0">
                     <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah</span> Perangkat
@@ -151,7 +147,7 @@
             
             <!-- SECTION: DASHBOARD UTAMA -->
             <div id="view-dashboard" class="block space-y-6">
-                <!-- Stat Cards (Clickable) -->
+                <!-- Stat Cards -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                     <div onclick="filterDashboardStat('Total')" class="glass-panel rounded-xl p-3.5 md:p-5 flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition-all group">
                         <div class="min-w-0">
@@ -191,7 +187,7 @@
                     </div>
                 </div>
 
-                <!-- Area Grid Card Berdasarkan Stat yang Diklik -->
+                <!-- Area Grid Card -->
                 <div id="dashboard-card-section" class="glass-panel rounded-xl p-4 md:p-5 hidden space-y-4">
                     <div class="flex justify-between items-center border-b border-gray-700/50 pb-3">
                         <h3 class="text-xs md:text-sm font-bold text-white flex items-center gap-2 truncate pr-2">
@@ -201,13 +197,11 @@
                             <i class="fas fa-times"></i> Tutup
                         </button>
                     </div>
-                    <div id="dashboard-card-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 max-h-[450px] overflow-y-auto pr-1">
-                        <!-- Dynamic Cards Di Sini -->
-                    </div>
+                    <div id="dashboard-card-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 max-h-[450px] overflow-y-auto pr-1"></div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                    <!-- LIVE RSS FEED CARD (Vertical Running Text) -->
+                    <!-- LIVE RSS FEED CARD -->
                     <div class="glass-panel rounded-xl p-4 md:p-5 flex flex-col h-[230px]">
                         <h3 class="text-xs md:text-sm font-semibold text-white mb-3 flex items-center justify-between shrink-0">
                             <span class="flex items-center gap-2">
@@ -249,7 +243,6 @@
 
             <!-- SECTION: DAFTAR ALAT ITB -->
             <div id="view-daftar-alat" class="hidden space-y-6">
-                <!-- Kalender Bulan Aktif Minimalist (< >) -->
                 <div class="glass-panel rounded-xl p-3 md:px-6 md:py-3.5 flex items-center justify-between max-w-sm mx-auto">
                     <button onclick="changeMonth(-1)" title="Bulan Sebelumnya" class="w-9 h-9 rounded-lg bg-white/5 hover:bg-blue-600/40 text-gray-300 hover:text-white border border-white/10 flex items-center justify-center transition-colors">
                         <i class="fas fa-chevron-left text-xs"></i>
@@ -274,16 +267,18 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 justify-end">
-                            <button onclick="exportToXLSX()" class="flex-1 sm:flex-none bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                            <button onclick="syncFromCloud()" class="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-blue-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-sync-alt"></i> Sync Cloud
+                            </button>
+                            <button onclick="exportToXLSX()" class="bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
                                 <i class="fas fa-file-excel"></i> XLSX
                             </button>
-                            <button onclick="exportToPDF()" class="flex-1 sm:flex-none bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                            <button onclick="exportToPDF()" class="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </button>
                         </div>
                     </div>
                     
-                    <!-- Responsive Table Container -->
                     <div class="w-full overflow-x-auto rounded-lg border border-gray-700/50">
                         <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
                             <thead>
@@ -299,9 +294,7 @@
                                     <th class="py-3 px-3 font-semibold text-center">Status & Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="device-table-body" class="text-xs md:text-sm divide-y divide-gray-700/40">
-                                <!-- Data Kosong / Dinamis -->
-                            </tbody>
+                            <tbody id="device-table-body" class="text-xs md:text-sm divide-y divide-gray-700/40"></tbody>
                         </table>
                         <div id="device-empty-state" class="text-center py-10 text-gray-400 text-xs md:text-sm">
                             Memuat data perangkat...
@@ -336,9 +329,7 @@
                                     <th class="py-3 px-3 font-semibold text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="log-table-body" class="text-xs md:text-sm divide-y divide-gray-700/40">
-                                <!-- Data Log Otomatis -->
-                            </tbody>
+                            <tbody id="log-table-body" class="text-xs md:text-sm divide-y divide-gray-700/40"></tbody>
                         </table>
                         <div id="log-empty-state" class="text-center py-10 text-gray-400 text-xs md:text-sm">
                             Belum ada log aktivitas.
@@ -351,8 +342,8 @@
             <div id="view-backup" class="hidden space-y-6">
                 <div class="glass-panel rounded-xl p-6 md:p-10 max-w-xl mx-auto text-center space-y-6">
                     <i class="fas fa-database text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-lg md:text-xl font-bold text-white">Backup & Restore Data Lokal / Cloud</h3>
-                    <p class="text-xs md:text-sm text-gray-400">Amankan data inventaris dan log Anda ke dalam file JSON di perangkat atau pulihkan kembali dari cadangan sebelumnya.</p>
+                    <h3 class="text-lg md:text-xl font-bold text-white">Backup & Restore Data JSON</h3>
+                    <p class="text-xs md:text-sm text-gray-400">Amankan data inventaris dan log ke dalam file JSON di perangkat atau pulihkan kembali dari cadangan sebelumnya.</p>
                     
                     <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
                         <button onclick="downloadBackupJSON()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg font-medium text-xs md:text-sm transition-colors flex items-center justify-center gap-2">
@@ -369,7 +360,7 @@
         </div>
     </main>
 
-    <!-- MODAL: Auth Login untuk Log -->
+    <!-- MODAL LOG AUTH -->
     <div id="modal-auth-log" class="modal fixed inset-0 z-50 justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-xl relative shadow-2xl">
             <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
@@ -396,7 +387,7 @@
         </div>
     </div>
 
-    <!-- MODAL: Auth Login untuk Hapus Perangkat (Admin Only) -->
+    <!-- MODAL DELETE AUTH -->
     <div id="modal-auth-delete" class="modal fixed inset-0 z-50 justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-xl relative shadow-2xl">
             <button onclick="closeDeleteAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
@@ -424,7 +415,7 @@
         </div>
     </div>
 
-    <!-- MODAL: Tambah/Edit Perangkat -->
+    <!-- MODAL PERANGKAT -->
     <div id="modal-device" class="modal fixed inset-0 z-50 justify-center items-center p-4">
         <div class="glass-panel w-full max-w-xl p-5 md:p-6 rounded-xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
             <button onclick="closeDeviceModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
@@ -439,7 +430,6 @@
                     <input type="date" id="device-date" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
                 </div>
 
-                <!-- Multiple Device Input Container -->
                 <div id="multiple-device-container" class="space-y-3">
                     <div class="flex items-center justify-between">
                         <label class="block text-xs font-medium text-gray-400">Daftar Perangkat, Qty & Kategori</label>
@@ -447,9 +437,7 @@
                             <i class="fas fa-plus-circle"></i> Tambah Baris Alat
                         </button>
                     </div>
-                    <div id="device-rows-list" class="space-y-2">
-                        <!-- Dynamic Rows Here -->
-                    </div>
+                    <div id="device-rows-list" class="space-y-2"></div>
                 </div>
 
                 <div id="single-device-edit-fields" class="space-y-4 hidden">
@@ -513,25 +501,8 @@
     </div>
 
     <script>
-        // --- 1. KONFIGURASI FIREBASE (Opsional / Aktif jika diisi) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyB8dsZsyWcLv10vup50oDLk-XsVKfUmoNE",
-            authDomain: "itb3tv.firebaseapp.com",
-            projectId: "itb3tv",
-            storageBucket: "itb3tv.firebasestorage.app",
-            messagingSenderId: "834036188603",
-            appId: "1:834036188603:web:9a2a6430a4d12bc8f5b09e"
-        };
-
-        let db = null;
-        try {
-            if (firebaseConfig.apiKey !== "AIzaSyB8dsZsyWcLv10vup50oDLk-XsVKfUmoNE") {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-            }
-        } catch (e) {
-            console.log("Firebase tidak dikonfigurasi, berjalan dengan mode LocalStorage saja.");
-        }
+        // --- GOOGLE APPS SCRIPT WEBHOOK ENDPOINT (Opsional: https://script.google.com/macros/s/AKfycbzZzTnWU8yEcoovzuPLBC6sXNBwkvNdVQ7xNILhAk05WXQ8Fy8MiAHbglqKcSYB2PV9/exec) ---
+        const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzZzTnWU8yEcoovzuPLBC6sXNBwkvNdVQ7xNILhAk05WXQ8Fy8MiAHbglqKcSYB2PV9/exec"; 
 
         // --- DATA STATE & LOCALSTORAGE ---
         let devices = [];
@@ -556,29 +527,45 @@
         function saveToLocalStorage() {
             localStorage.setItem('itb_devices', JSON.stringify(devices));
             localStorage.setItem('itb_logs', JSON.stringify(maintenanceLogs));
+            syncToCloud();
         }
 
-        // --- SYNC DENGAN FIRESTORE JIKA AKTIF ---
-        function initFirestoreSync() {
-            if (!db) return;
-            db.collection("itb_devices").onSnapshot((snapshot) => {
-                devices = [];
-                snapshot.forEach((doc) => {
-                    devices.push({ id: doc.id, ...doc.data() });
+        // --- CLOUD SYNC VIA WEBHOOK / GOOGLE SHEETS ---
+        async function syncToCloud() {
+            if (!GOOGLE_SHEETS_WEBHOOK_URL) return;
+            try {
+                await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ devices: devices, logs: maintenanceLogs })
                 });
-                saveToLocalStorage();
-                renderDevices();
-                updateDashboardStats();
-            });
+            } catch (err) {
+                console.log("Cloud Sync Webhook Info:", err);
+            }
+        }
 
-            db.collection("itb_logs").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-                maintenanceLogs = [];
-                snapshot.forEach((doc) => {
-                    maintenanceLogs.push({ id: doc.id, ...doc.data() });
-                });
-                saveToLocalStorage();
-                renderLogs();
-            });
+        async function syncFromCloud() {
+            if (!GOOGLE_SHEETS_WEBHOOK_URL) {
+                alert("URL Cloud Sync belum dikonfigurasi. Data saat ini tersimpan sempurna secara lokal.");
+                return;
+            }
+            try {
+                const res = await fetch(GOOGLE_SHEETS_WEBHOOK_URL);
+                const data = await res.json();
+                if (data.devices) {
+                    devices = data.devices;
+                    maintenanceLogs = data.logs || [];
+                    localStorage.setItem('itb_devices', JSON.stringify(devices));
+                    localStorage.setItem('itb_logs', JSON.stringify(maintenanceLogs));
+                    renderDevices();
+                    renderLogs();
+                    updateDashboardStats();
+                    alert("Data berhasil tersinkronisasi dari Cloud!");
+                }
+            } catch (err) {
+                alert("Gagal mengambil data Cloud Sync: " + err);
+            }
         }
 
         function updateMonthLabel() {
@@ -595,7 +582,7 @@
             closeDashboardCards();
         }
 
-        // --- LIVE RSS TICKER LOGIC (Vertical Running Text) ---
+        // --- LIVE RSS TICKER LOGIC ---
         let tickerInterval = null;
         async function loadLiveRSS() {
             const wrapper = document.getElementById('rss-items-wrapper');
@@ -638,7 +625,6 @@
                             `;
                             wrapper.appendChild(itemEl);
                         }
-
                         startVerticalTicker();
                     } else {
                         throw new Error("Format XML kosong");
@@ -661,7 +647,7 @@
             if (tickerInterval) clearInterval(tickerInterval);
 
             tickerInterval = setInterval(() => {
-                if (container.matches(':hover')) return; // Jeda saat kursor diarahkan ke card
+                if (container.matches(':hover')) return;
                 const firstChild = wrapper.firstElementChild;
                 if (firstChild) {
                     wrapper.style.transition = 'transform 0.5s ease-in-out';
@@ -677,7 +663,7 @@
             }, 3500);
         }
 
-        // --- INTERAKTIF: FILTER STATS CARD DI DASHBOARD UTAMA ---
+        // --- DASHBOARD FILTER CARDS ---
         function filterDashboardStat(status) {
             const section = document.getElementById('dashboard-card-section');
             const titleText = document.getElementById('dashboard-card-title-text');
@@ -737,7 +723,7 @@
             if (section) section.classList.add('hidden');
         }
 
-        // --- SIDEBAR & NAVIGASI ---
+        // --- SIDEBAR & NAVIGATION ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -827,7 +813,7 @@
             document.getElementById('stat-mon').innerText = mon;
         }
 
-        // --- RENDER TABEL PERANGKAT ---
+        // --- RENDER TABLE DEVICE ---
         function renderDevices() {
             const tbody = document.getElementById('device-table-body');
             const emptyState = document.getElementById('device-empty-state');
@@ -901,7 +887,7 @@
             });
         }
 
-        // --- RENDER TABEL LOG ---
+        // --- RENDER TABLE LOG ---
         function renderLogs() {
             const tbody = document.getElementById('log-table-body');
             const emptyState = document.getElementById('log-empty-state');
@@ -940,7 +926,7 @@
             });
         }
 
-        // --- EXPORT XLSX (Standar SheetJS yang Stabil & Aman) ---
+        // --- EXPORT XLSX ---
         function exportToXLSX() {
             const targetYear = activeDate.getFullYear();
             const targetMonth = activeDate.getMonth();
@@ -979,18 +965,9 @@
             });
 
             const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
-
-            // Pengaturan lebar kolom otomatis yang optimal agar tidak terpotong
             worksheet['!cols'] = [
-                { wch: 12 }, // ID Alat
-                { wch: 14 }, // Tanggal
-                { wch: 25 }, // Nama Perangkat
-                { wch: 8 },  // Qty
-                { wch: 18 }, // Kategori
-                { wch: 18 }, // Lokasi
-                { wch: 18 }, // Crew
-                { wch: 35 }, // Task Detail
-                { wch: 15 }  // Status
+                { wch: 12 }, { wch: 14 }, { wch: 25 }, { wch: 8 },
+                { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 35 }, { wch: 15 }
             ];
 
             const workbook = XLSX.utils.book_new();
@@ -1055,7 +1032,7 @@
             doc.save(`ITB3TV_DaftarAlat_${activeMonthStr.replace(' ', '_')}.pdf`);
         }
 
-        // --- MULTIPLE DEVICE ROWS HANDLING ---
+        // --- MULTIPLE DEVICE ROWS ---
         function addDeviceRow(nameVal = '', qtyVal = 1, catVal = '') {
             const list = document.getElementById('device-rows-list');
             const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
@@ -1065,7 +1042,7 @@
             div.id = rowId;
             div.innerHTML = `
                 <input type="text" placeholder="Nama Perangkat..." required value="${nameVal}" class="glass-input flex-1 px-3 py-2 rounded-lg text-sm row-name-input">
-                <input type="number" placeholder="Qty" min="1" required value="${qtyVal}" class="glass-input w-20 px-3 py-2 rounded-lg text-sm row-qty-input" title="Quantity per item">
+                <input type="number" placeholder="Qty" min="1" required value="${qtyVal}" class="glass-input w-20 px-3 py-2 rounded-lg text-sm row-qty-input">
                 <select required class="glass-input w-36 px-3 py-2 rounded-lg text-sm row-cat-select">
                     <option value="" disabled ${!catVal ? 'selected' : ''}>Pilih Kategori...</option>
                     <option value="PC Broadcast" ${catVal === 'PC Broadcast' ? 'selected' : ''}>PC Broadcast</option>
@@ -1092,7 +1069,7 @@
             }
         }
 
-        // --- DEVICE MODAL HANDLING ---
+        // --- DEVICE MODAL & SUBMIT ---
         function openDeviceModal() {
             document.getElementById('device-form').reset();
             document.getElementById('device-id').value = '';
@@ -1115,7 +1092,7 @@
             document.getElementById('modal-device').classList.remove('active');
         }
 
-        document.getElementById('device-form').addEventListener('submit', async function(e) {
+        document.getElementById('device-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const deviceId = document.getElementById('device-id').value;
             const dateVal = document.getElementById('device-date').value || getFormattedDate();
@@ -1134,7 +1111,8 @@
                     const qty = parseInt(qtyInputs[i].value) || 1;
                     const category = catSelects[i].value;
                     if (name && category) {
-                        const newDev = {
+                        devices.push({
+                            id: 'DEV-' + Date.now() + '-' + i,
                             date: dateVal,
                             name: name,
                             qty: qty,
@@ -1143,38 +1121,24 @@
                             crew: crewVal,
                             status: statusVal,
                             taskDetail: taskVal
-                        };
-
-                        if (db) {
-                            await db.collection("itb_devices").add(newDev);
-                            await db.collection("itb_logs").add({
-                                date: dateVal,
-                                type: 'TAMBAH',
-                                targetName: name,
-                                location: locationVal,
-                                action: `Menambahkan perangkat baru Qty: ${qty} (${taskVal})`,
-                                crew: crewVal,
-                                status: statusVal,
-                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                        } else {
-                            devices.push(newDev);
-                            maintenanceLogs.unshift({
-                                id: 'LOG-' + Date.now() + '-' + i,
-                                date: dateVal,
-                                type: 'TAMBAH',
-                                targetName: name,
-                                location: locationVal,
-                                action: `Menambahkan perangkat baru Qty: ${qty} (${taskVal})`,
-                                crew: crewVal,
-                                status: statusVal
-                            });
-                        }
+                        });
+                        maintenanceLogs.unshift({
+                            id: 'LOG-' + Date.now() + '-' + i,
+                            date: dateVal,
+                            type: 'TAMBAH',
+                            targetName: name,
+                            location: locationVal,
+                            action: `Menambahkan perangkat baru Qty: ${qty} (${taskVal})`,
+                            crew: crewVal,
+                            status: statusVal
+                        });
                     }
                 }
             } else {
                 const qtyVal = parseInt(document.getElementById('single-device-qty').value) || 1;
+                const idx = devices.findIndex(d => d.id === deviceId || devices.indexOf(d) == deviceId);
                 const devData = {
+                    id: deviceId,
                     date: dateVal,
                     name: document.getElementById('single-device-name').value,
                     qty: qtyVal,
@@ -1185,32 +1149,17 @@
                     taskDetail: taskVal
                 };
 
-                if (db) {
-                    await db.collection("itb_devices").doc(deviceId).update(devData);
-                    await db.collection("itb_logs").add({
-                        date: dateVal,
-                        type: 'EDIT',
-                        targetName: devData.name,
-                        location: locationVal,
-                        action: `Memperbarui data perangkat Qty: ${qtyVal} (${taskVal})`,
-                        crew: crewVal,
-                        status: statusVal,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                } else {
-                    const idx = devices.findIndex(d => (d.id && d.id === deviceId) || devices.indexOf(d) == deviceId);
-                    if (idx !== -1) devices[idx] = devData;
-                    maintenanceLogs.unshift({
-                        id: 'LOG-' + Date.now(),
-                        date: dateVal,
-                        type: 'EDIT',
-                        targetName: devData.name,
-                        location: locationVal,
-                        action: `Memperbarui data perangkat Qty: ${qtyVal} (${taskVal})`,
-                        crew: crewVal,
-                        status: statusVal
-                    });
-                }
+                if (idx !== -1) devices[idx] = devData;
+                maintenanceLogs.unshift({
+                    id: 'LOG-' + Date.now(),
+                    date: dateVal,
+                    type: 'EDIT',
+                    targetName: devData.name,
+                    location: locationVal,
+                    action: `Memperbarui data perangkat Qty: ${qtyVal} (${taskVal})`,
+                    crew: crewVal,
+                    status: statusVal
+                });
             }
             
             saveToLocalStorage();
@@ -1221,7 +1170,7 @@
         });
 
         function editDevice(uniqueKey) {
-            const dev = devices.find((d, i) => (d.id && d.id === uniqueKey) || i == uniqueKey);
+            const dev = devices.find((d, i) => d.id === uniqueKey || i == uniqueKey);
             if (!dev) return;
 
             document.getElementById('device-id').value = dev.id || uniqueKey;
@@ -1245,42 +1194,28 @@
             document.getElementById('modal-device').classList.add('active');
         }
 
-        async function quickChangeStatus(uniqueKey, newStatus) {
-            const dev = devices.find((d, i) => (d.id && d.id === uniqueKey) || i == uniqueKey);
+        function quickChangeStatus(uniqueKey, newStatus) {
+            const dev = devices.find((d, i) => d.id === uniqueKey || i == uniqueKey);
             if (!dev) return;
 
-            if (db && dev.id) {
-                await db.collection("itb_devices").doc(dev.id).update({ status: newStatus });
-                await db.collection("itb_logs").add({
-                    date: getFormattedDate(),
-                    type: 'STATUS',
-                    targetName: dev.name,
-                    location: dev.location,
-                    action: `Ubah status cepat ke ${newStatus}`,
-                    crew: dev.crew,
-                    status: newStatus,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } else {
-                dev.status = newStatus;
-                maintenanceLogs.unshift({
-                    id: 'LOG-' + Date.now(),
-                    date: getFormattedDate(),
-                    type: 'STATUS',
-                    targetName: dev.name,
-                    location: dev.location,
-                    action: `Ubah status cepat ke ${newStatus}`,
-                    crew: dev.crew,
-                    status: newStatus
-                });
-            }
+            dev.status = newStatus;
+            maintenanceLogs.unshift({
+                id: 'LOG-' + Date.now(),
+                date: getFormattedDate(),
+                type: 'STATUS',
+                targetName: dev.name,
+                location: dev.location,
+                action: `Ubah status cepat ke ${newStatus}`,
+                crew: dev.crew,
+                status: newStatus
+            });
             saveToLocalStorage();
             renderDevices();
             renderLogs();
             updateDashboardStats();
         }
 
-        // --- ADMIN DELETE AUTH MODAL ---
+        // --- DELETE AUTH & LOGIC ---
         function requestDeleteDevice(uniqueKey) {
             document.getElementById('delete-target-id').value = uniqueKey;
             document.getElementById('delete-admin-password').value = '';
@@ -1305,43 +1240,29 @@
             }
         }
 
-        async function executeDeleteDevice(uniqueKey) {
-            const devIndex = devices.findIndex((d, i) => (d.id && d.id === uniqueKey) || i == uniqueKey);
+        function executeDeleteDevice(uniqueKey) {
+            const devIndex = devices.findIndex((d, i) => d.id === uniqueKey || i == uniqueKey);
             if (devIndex === -1) return;
             const dev = devices[devIndex];
 
-            if (db && dev.id) {
-                await db.collection("itb_devices").doc(dev.id).delete();
-                await db.collection("itb_logs").add({
-                    date: getFormattedDate(),
-                    type: 'HAPUS',
-                    targetName: dev.name,
-                    location: dev.location,
-                    action: `Menghapus perangkat dari inventaris (Admin)`,
-                    crew: dev.crew,
-                    status: 'Delete',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } else {
-                devices.splice(devIndex, 1);
-                maintenanceLogs.unshift({
-                    id: 'LOG-' + Date.now(),
-                    date: getFormattedDate(),
-                    type: 'HAPUS',
-                    targetName: dev.name,
-                    location: dev.location,
-                    action: `Menghapus perangkat dari inventaris (Admin)`,
-                    crew: dev.crew,
-                    status: 'Delete'
-                });
-            }
+            devices.splice(devIndex, 1);
+            maintenanceLogs.unshift({
+                id: 'LOG-' + Date.now(),
+                date: getFormattedDate(),
+                type: 'HAPUS',
+                targetName: dev.name,
+                location: dev.location,
+                action: `Menghapus perangkat dari inventaris (Admin)`,
+                crew: dev.crew,
+                status: 'Delete'
+            });
             saveToLocalStorage();
             renderDevices();
             renderLogs();
             updateDashboardStats();
         }
 
-        async function deleteLog(index) {
+        function deleteLog(index) {
             maintenanceLogs.splice(index, 1);
             saveToLocalStorage();
             renderLogs();
@@ -1375,11 +1296,10 @@
                         devices = parsed.devices;
                         maintenanceLogs = parsed.logs || [];
                         saveToLocalStorage();
-
                         renderDevices();
                         renderLogs();
                         updateDashboardStats();
-                        alert("Data berhasil dipulihkan (Restore) dari file backup JSON!");
+                        alert("Data berhasil dipulihkan dari file backup JSON!");
                     } else {
                         alert("Format file JSON backup tidak valid.");
                     }
@@ -1396,11 +1316,6 @@
         renderDevices();
         renderLogs();
         updateDashboardStats();
-
-        // Aktifkan Cloud Sync jika konfigurasi Firestore sudah diisi
-        initFirestoreSync();
-
-        // Muat Live RSS Feed saat halaman dibuka
         loadLiveRSS();
     </script>
 </body>
