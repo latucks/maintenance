@@ -515,17 +515,17 @@
     <script>
         // --- 1. KONFIGURASI FIREBASE (Opsional / Aktif jika diisi) ---
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "your-project-id.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project-id.appspot.com",
-            messagingSenderId: "your-sender-id",
-            appId: "your-app-id"
+            apiKey: "AIzaSyDAGlXvWbYFFqNYc318N94Cf4Yo3zoVvTg",
+            authDomain: "maintenance-monitoring-955a3.firebaseapp.com",
+            projectId: "maintenance-monitoring-955a3",
+            storageBucket: "maintenance-monitoring-955a3.firebasestorage.app",
+            messagingSenderId: "62236243184",
+            appId: "1:62236243184:web:5af5b1b5509cd7c6c9fe35"
         };
 
         let db = null;
         try {
-            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            if (firebaseConfig.apiKey !== "AIzaSyDAGlXvWbYFFqNYc318N94Cf4Yo3zoVvTg") {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
             }
