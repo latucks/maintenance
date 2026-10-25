@@ -114,8 +114,12 @@
                 <i class="fas fa-database w-5 shrink-0"></i> Backup & Restore
             </button>
         </nav>
-        <div class="p-4 border-t border-gray-700/30 text-center shrink-0">
-            <p class="text-xs text-white/30 font-medium tracking-wide truncate">Create By Surya Ardiansyah</p>
+        <div class="p-4 border-t border-gray-700/30 shrink-0">
+            <!-- Tombol Webhook Baru -->
+            <button onclick="configWebhook()" class="w-full flex items-center justify-center gap-2 px-4 py-2 mb-3 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 transition-all text-xs font-medium">
+                <i class="fas fa-link"></i> Setting Webhook
+            </button>
+            <p class="text-xs text-white/30 font-medium tracking-wide text-center truncate">Create By Surya Ardiansyah</p>
         </div>
     </aside>
 
@@ -132,12 +136,14 @@
                     <h2 id="header-title" class="text-base md:text-xl font-bold text-white tracking-wide truncate">IT BROADCAST 3TV</h2>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <div id="sync-status" class="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync Active
-                </div>
+            
+            <!-- Global Header Actions -->
+            <div class="flex items-center gap-2 md:gap-3">
+                <button onclick="syncFromCloud()" id="btn-sync-global" title="Tarik Data dari Cloud Server" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3 py-2 rounded-lg transition-colors border border-emerald-500/30 flex items-center gap-2 text-xs md:text-sm font-medium shrink-0">
+                    <i class="fas fa-sync-alt" id="icon-sync-global"></i> <span class="hidden sm:inline">Sync Data</span>
+                </button>
                 <button onclick="openDeviceModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 md:px-4 py-2 rounded-lg shadow transition-colors flex items-center gap-2 text-xs md:text-sm font-medium shrink-0">
-                    <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah</span> Perangkat
+                    <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah</span> <span class="hidden md:inline">Perangkat</span>
                 </button>
             </div>
         </header>
@@ -267,13 +273,10 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 justify-end">
-                            <button onclick="syncFromCloud()" class="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-blue-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-sync-alt"></i> Sync Cloud
-                            </button>
-                            <button onclick="exportToXLSX()" class="bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
+                            <button onclick="exportToXLSX()" class="flex-1 sm:flex-none bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
                                 <i class="fas fa-file-excel"></i> XLSX
                             </button>
-                            <button onclick="exportToPDF()" class="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
+                            <button onclick="exportToPDF()" class="flex-1 sm:flex-none bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </button>
                         </div>
@@ -501,8 +504,26 @@
     </div>
 
     <script>
-        // --- GOOGLE APPS SCRIPT WEBHOOK ENDPOINT (Opsional: https://script.google.com/macros/s/AKfycbzZzTnWU8yEcoovzuPLBC6sXNBwkvNdVQ7xNILhAk05WXQ8Fy8MiAHbglqKcSYB2PV9/exec) ---
-        const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzZzTnWU8yEcoovzuPLBC6sXNBwkvNdVQ7xNILhAk05WXQ8Fy8MiAHbglqKcSYB2PV9/exec"; 
+        // --- GOOGLE APPS SCRIPT WEBHOOK ENDPOINT (DIBACA DARI LOCALSTORAGE) ---
+        let GOOGLE_SHEETS_WEBHOOK_URL = localStorage.getItem('itb_webhook_url') || ""; 
+
+        // Fungsi Baru: Konfigurasi Webhook URL lewat Tombol UI
+        function configWebhook() {
+            const url = prompt("Masukkan URL Google Apps Script Webhook Anda:\n(Kosongkan lalu klik OK untuk mematikan fitur Cloud)", GOOGLE_SHEETS_WEBHOOK_URL);
+            
+            // Jika user tidak klik "Batal" / Cancel
+            if (url !== null) {
+                GOOGLE_SHEETS_WEBHOOK_URL = url.trim();
+                localStorage.setItem('itb_webhook_url', GOOGLE_SHEETS_WEBHOOK_URL);
+                
+                if (GOOGLE_SHEETS_WEBHOOK_URL !== "") {
+                    alert("Webhook URL berhasil disimpan! Sistem akan mencoba menarik data sekarang.");
+                    syncFromCloud();
+                } else {
+                    alert("Fitur Webhook dimatikan. Aplikasi sekarang berjalan di mode Offline (LocalStorage).");
+                }
+            }
+        }
 
         // --- DATA STATE & LOCALSTORAGE ---
         let devices = [];
@@ -547,9 +568,13 @@
 
         async function syncFromCloud() {
             if (!GOOGLE_SHEETS_WEBHOOK_URL) {
-                alert("URL Cloud Sync belum dikonfigurasi. Data saat ini tersimpan sempurna secara lokal.");
+                alert("Webhook URL belum di-setting! Silakan klik tombol 'Setting Webhook' di sidebar kiri bawah.");
                 return;
             }
+            
+            const iconSync = document.getElementById('icon-sync-global');
+            if(iconSync) iconSync.classList.add('fa-spin');
+
             try {
                 const res = await fetch(GOOGLE_SHEETS_WEBHOOK_URL);
                 const data = await res.json();
@@ -561,10 +586,13 @@
                     renderDevices();
                     renderLogs();
                     updateDashboardStats();
-                    alert("Data berhasil tersinkronisasi dari Cloud!");
+                    // Alert ini bisa di-comment jika dirasa mengganggu saat auto-sync
+                    // alert("Data berhasil ditarik dan disinkronisasi dari Cloud Server!");
                 }
             } catch (err) {
-                alert("Gagal mengambil data Cloud Sync: " + err);
+                alert("Gagal mengambil data Cloud Sync. Pastikan URL Webhook Anda benar dan memiliki akses 'Anyone' (Siapa saja). Error: " + err);
+            } finally {
+                if(iconSync) iconSync.classList.remove('fa-spin');
             }
         }
 
@@ -1317,15 +1345,8 @@
         renderLogs();
         updateDashboardStats();
         loadLiveRSS();
-                // Inisialisasi awal
-        loadFromLocalStorage();
-        updateMonthLabel();
-        renderDevices();
-        renderLogs();
-        updateDashboardStats();
-        loadLiveRSS();
-        
-        // TAMBAHKAN BARIS INI: Tarik data otomatis saat web dibuka
+
+        // Menarik data otomatis saat halaman web pertama kali dibuka, JIKA webhook sudah disetting
         if (GOOGLE_SHEETS_WEBHOOK_URL !== "https://script.google.com/macros/s/AKfycbzZzTnWU8yEcoovzuPLBC6sXNBwkvNdVQ7xNILhAk05WXQ8Fy8MiAHbglqKcSYB2PV9/exec") {
             syncFromCloud();
         }
