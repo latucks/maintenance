@@ -1317,6 +1317,18 @@
         renderLogs();
         updateDashboardStats();
         loadLiveRSS();
+                // Inisialisasi awal
+        loadFromLocalStorage();
+        updateMonthLabel();
+        renderDevices();
+        renderLogs();
+        updateDashboardStats();
+        loadLiveRSS();
+        
+        // TAMBAHKAN BARIS INI: Tarik data otomatis saat web dibuka
+        if (GOOGLE_SHEETS_WEBHOOK_URL !== "https://script.google.com/macros/s/AKfycbzZzTnWU8yEcoovzuPLBC6sXNBwkvNdVQ7xNILhAk05WXQ8Fy8MiAHbglqKcSYB2PV9/exec") {
+            syncFromCloud();
+        }
     </script>
 </body>
 </html>
