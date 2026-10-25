@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT BROADCAST 3TV Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- SheetJS Library untuk Export XLSX Profesional -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF & AutoTable Library untuk Export PDF Profesional -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e293b' fill-opacity='0.8'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            color: #e2e8f0;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        /* Animasi Shimmer / Riak Cahaya & Air pada Sidebar */
+        @keyframes sidebarShimmer {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .glass-sidebar {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 58, 138, 0.3), rgba(15, 23, 42, 0.85));
+            background-size: 200% 200%;
+            animation: sidebarShimmer 10s ease infinite;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset -5px 0 15px rgba(59, 130, 246, 0.05);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen w-full overflow-hidden">
+
+    <!-- Mobile Sidebar Toggle Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-25 hidden md:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 w-64 glass-sidebar flex flex-col h-full z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+        <div class="p-6 border-b border-gray-700/50 flex justify-between items-center shrink-0">
+            <h1 class="text-xl font-bold text-white tracking-wider flex items-center gap-3 min-w-0">
+                <i class="fas fa-server text-blue-500 shrink-0"></i>
+                <span class="truncate">IT BROADCAST 3TV</span>
+            </h1>
+            <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <nav class="flex-1 py-4 px-3 space-y-2 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600/30 text-blue-400 border border-blue-500/30 transition-all text-left font-medium">
+                <i class="fas fa-chart-pie w-5 shrink-0"></i> Dashboard Utama
+            </button>
+            <button onclick="switchTab('daftar-alat')" id="tab-daftar-alat" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 transition-all text-left font-medium">
+                <i class="fas fa-desktop w-5 shrink-0"></i> Daftar Alat ITB
+            </button>
+            <button onclick="handleLogMenuClick()" id="tab-log" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 transition-all text-left font-medium">
+                <i class="fas fa-clipboard-list w-5 shrink-0"></i> Log <i class="fas fa-lock ml-auto text-xs text-yellow-400"></i>
+            </button>
+            <button onclick="switchTab('backup')" id="tab-backup" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 transition-all text-left font-medium">
+                <i class="fas fa-database w-5 shrink-0"></i> Backup & Restore
+            </button>
+        </nav>
+        <!-- Sidebar Watermark Footer (Transparan & Responsif) -->
+        <div class="p-4 border-t border-gray-700/30 text-center shrink-0">
+            <p class="text-xs text-white/30 font-medium tracking-wide truncate">Create By Surya Ardiansyah</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative z-0 w-full">
+        <!-- Header -->
+        <header class="glass-panel py-3 px-4 md:px-8 flex justify-between items-center z-10 shrink-0">
+            <div class="flex items-center gap-3 min-w-0">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-300 hover:text-white text-xl p-1 shrink-0">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-semibold tracking-widest text-blue-400 uppercase">MAINTENANCE & MONITORING</span>
+                    <h2 id="header-title" class="text-base md:text-xl font-bold text-white tracking-wide truncate">IT BROADCAST 3TV</h2>
+                </div>
+            </div>
+            <button onclick="openDeviceModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 md:px-4 py-2 rounded-lg shadow transition-colors flex items-center gap-2 text-xs md:text-sm font-medium shrink-0">
+                <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah</span> Perangkat
+            </button>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-auto p-4 md:p-6 z-0 w-full" id="main-content">
+            
+            <!-- SECTION: DASHBOARD UTAMA -->
+            <div id="view-dashboard" class="block space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-panel rounded-xl p-5 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Perangkat</p>
+                            <h3 id="stat-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl border border-blue-500/30">
+                            <i class="fas fa-server"></i>
+                        </div>
+                    </div>
+                    <div class="glass-panel rounded-xl p-5 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Ready</p>
+                            <h3 id="stat-ready" class="text-2xl font-bold text-green-400 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center text-xl border border-green-500/30">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                    <div class="glass-panel rounded-xl p-5 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Maintenance</p>
+                            <h3 id="stat-maint" class="text-2xl font-bold text-yellow-400 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-xl border border-yellow-500/30">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                    </div>
+                    <div class="glass-panel rounded-xl p-5 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Monitoring</p>
+                            <h3 id="stat-mon" class="text-2xl font-bold text-blue-400 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl border border-blue-500/30">
+                            <i class="fas fa-desktop"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-xl p-5">
+                        <h3 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-info-circle text-blue-400"></i> Ringkasan Sistem ITB 3TV
+                        </h3>
+                        <p class="text-xs text-gray-300 leading-relaxed">
+                            Dashboard interaktif ini dirancang khusus untuk manajemen operasional broadcast IT, pelacakan inventaris perangkat, serta pencatatan log maintenance real-time lintas divisi di bawah naungan media business units. Gunakan menu sidebar untuk navigasi cepat antar fitur.
+                        </p>
+                    </div>
+                    <div class="glass-panel rounded-xl p-5">
+                        <h3 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-bolt text-yellow-400"></i> Aksi Cepat
+                        </h3>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="switchTab('daftar-alat')" class="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white px-4 py-2 rounded-lg text-xs font-medium border border-blue-500/30 transition-colors">
+                                Kelola Daftar Alat
+                            </button>
+                            <button onclick="openDeviceModal()" class="bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-4 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors">
+                                Tambah Perangkat Baru
+                            </button>
+                            <button onclick="switchTab('backup')" class="bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 rounded-lg text-xs font-medium border border-gray-600 transition-colors">
+                                Backup / Restore JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: DAFTAR ALAT ITB -->
+            <div id="view-daftar-alat" class="hidden space-y-6">
+                <!-- Kalender Bulan Aktif Minimalist (< >) -->
+                <div class="glass-panel rounded-xl p-3 md:px-6 md:py-3.5 flex items-center justify-between max-w-sm mx-auto">
+                    <button onclick="changeMonth(-1)" title="Bulan Sebelumnya" class="w-9 h-9 rounded-lg bg-white/5 hover:bg-blue-600/40 text-gray-300 hover:text-white border border-white/10 flex items-center justify-center transition-colors">
+                        <i class="fas fa-chevron-left text-xs"></i>
+                    </button>
+                    <div class="text-sm md:text-base font-bold text-white flex items-center gap-2 tracking-wide">
+                        <i class="fas fa-calendar-alt text-blue-400 text-sm"></i>
+                        <span id="active-month-label">Oktober 2026</span>
+                    </div>
+                    <button onclick="changeMonth(1)" title="Bulan Berikutnya" class="w-9 h-9 rounded-lg bg-white/5 hover:bg-blue-600/40 text-gray-300 hover:text-white border border-white/10 flex items-center justify-center transition-colors">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+
+                <div class="glass-panel rounded-xl p-4 md:p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div class="w-full md:w-auto flex-1 max-w-md">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" id="search-device-input" oninput="renderDevices()" placeholder="Cari nama perangkat, kategori, lokasi, crew..." class="glass-input w-full pl-10 pr-4 py-2 rounded-lg text-xs md:text-sm">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                            <button onclick="exportToXLSX()" class="bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-file-excel"></i> Export to XLSX
+                            </button>
+                            <button onclick="exportToPDF()" class="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-file-pdf"></i> Export to PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse min-w-[750px]">
+                            <thead>
+                                <tr class="border-b border-gray-600/50 text-gray-400 text-xs md:text-sm">
+                                    <th class="py-3 px-4 font-medium">ID Alat</th>
+                                    <th class="py-3 px-4 font-medium">Tanggal</th>
+                                    <th class="py-3 px-4 font-medium">Nama Perangkat</th>
+                                    <th class="py-3 px-4 font-medium">Kategori</th>
+                                    <th class="py-3 px-4 font-medium">Lokasi</th>
+                                    <th class="py-3 px-4 font-medium">Crew</th>
+                                    <th class="py-3 px-4 font-medium">Task Detail</th>
+                                    <th class="py-3 px-4 font-medium">Status & Aksi Cepat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="device-table-body" class="text-xs md:text-sm divide-y divide-gray-700/50">
+                                <!-- Data Kosong -->
+                            </tbody>
+                        </table>
+                        <div id="device-empty-state" class="text-center py-10 text-gray-500 text-sm">
+                            Belum ada data perangkat pada bulan ini.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: LOG -->
+            <div id="view-log" class="hidden space-y-6">
+                <div class="glass-panel rounded-xl p-4 md:p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-base md:text-lg font-semibold text-white">Log Aktivitas & Maintenance</h3>
+                            <p class="text-xs md:text-sm text-gray-400 mt-1">Dicatat otomatis dari penambahan, edit, perubahan status cepat, restore, dan penghapusan alat.</p>
+                        </div>
+                        <button onclick="switchTab('daftar-alat')" class="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-colors border border-red-500/30 flex items-center gap-1.5">
+                            <i class="fas fa-lock"></i> Kunci Log
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse min-w-[850px]">
+                            <thead>
+                                <tr class="border-b border-gray-600/50 text-gray-400 text-xs md:text-sm">
+                                    <th class="py-3 px-4 font-medium">Tanggal</th>
+                                    <th class="py-3 px-4 font-medium">Tipe</th>
+                                    <th class="py-3 px-4 font-medium">Perangkat</th>
+                                    <th class="py-3 px-4 font-medium">Lokasi</th>
+                                    <th class="py-3 px-4 font-medium">Aktivitas / Keterangan</th>
+                                    <th class="py-3 px-4 font-medium">Crew</th>
+                                    <th class="py-3 px-4 font-medium">Status</th>
+                                    <th class="py-3 px-4 font-medium text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="log-table-body" class="text-xs md:text-sm divide-y divide-gray-700/50">
+                                <!-- Data Log Otomatis -->
+                            </tbody>
+                        </table>
+                        <div id="log-empty-state" class="text-center py-10 text-gray-500 text-sm">
+                            Belum ada log aktivitas. Log akan terisi otomatis saat perangkat dikelola.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: BACKUP & RESTORE -->
+            <div id="view-backup" class="hidden space-y-6">
+                <div class="glass-panel rounded-xl p-6 md:p-10 max-w-xl mx-auto text-center space-y-6">
+                    <i class="fas fa-database text-4xl text-blue-500 mb-2"></i>
+                    <h3 class="text-xl font-bold text-white">Backup & Restore Data Lokal</h3>
+                    <p class="text-sm text-gray-400">Amankan data inventaris dan log Anda ke dalam file JSON di perangkat atau pulihkan kembali dari cadangan sebelumnya.</p>
+                    
+                    <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+                        <button onclick="downloadBackupJSON()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-download"></i> Download Backup (JSON)
+                        </button>
+                        <label class="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fas fa-upload"></i> Restore Data (JSON)
+                            <input type="file" id="restore-file-input" accept=".json" onchange="restoreBackupJSON(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL: Auth Login untuk Log -->
+    <div id="modal-auth-log" class="modal fixed inset-0 z-50 justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-xl relative shadow-2xl">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-500/30">
+                    <i class="fas fa-lock text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white">Autentikasi Menu Log</h3>
+                <p class="text-xs text-gray-400 mt-1">Masukkan password administrator broadcast untuk mengakses menu log.</p>
+            </div>
+            <form id="auth-form" class="space-y-4" onsubmit="handleAuthLogin(event)">
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Password</label>
+                    <input type="password" id="auth-password" required class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Masukkan password...">
+                    <p id="auth-error" class="text-xs text-red-400 mt-1 hidden">Password salah! Silakan coba lagi.</p>
+                </div>
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" onclick="closeAuthModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700/50 transition-colors">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors">Masuk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Auth Login untuk Hapus Perangkat (Admin Only) -->
+    <div id="modal-auth-delete" class="modal fixed inset-0 z-50 justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-xl relative shadow-2xl">
+            <button onclick="closeDeleteAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-red-600/20 text-red-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-red-500/30">
+                    <i class="fas fa-shield-alt text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white">Verifikasi Administrator</h3>
+                <p class="text-xs text-gray-400 mt-1">Masukkan password admin untuk menghapus data perangkat.</p>
+            </div>
+            <form id="delete-auth-form" class="space-y-4" onsubmit="handleDeleteAuthLogin(event)">
+                <input type="hidden" id="delete-target-index">
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Password Admin</label>
+                    <input type="password" id="delete-admin-password" required class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Masukkan password...">
+                    <p id="delete-auth-error" class="text-xs text-red-400 mt-1 hidden">Password salah! Hak akses ditolak.</p>
+                </div>
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" onclick="closeDeleteAuthModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700/50 transition-colors">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 text-white transition-colors">Konfirmasi Hapus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Tambah/Edit Perangkat -->
+    <div id="modal-device" class="modal fixed inset-0 z-50 justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-md p-6 rounded-xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button onclick="closeDeviceModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-4 text-white" id="device-modal-title">Tambah Perangkat</h3>
+            <form id="device-form" class="space-y-4">
+                <input type="hidden" id="device-index">
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Tanggal</label>
+                    <input type="date" id="device-date" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Nama Perangkat</label>
+                    <input type="text" id="device-name" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Kategori</label>
+                    <select id="device-category" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                        <option value="" disabled selected>Pilih Kategori...</option>
+                        <option value="PC Broadcast">PC Broadcast</option>
+                        <option value="Graphics System">Graphics System</option>
+                        <option value="Replay Server">Replay Server</option>
+                        <option value="Video Server">Video Server</option>
+                        <option value="Sound Card">Sound Card</option>
+                        <option value="Network Switch">Network Switch</option>
+                        <option value="IO External">IO External</option>
+                        <option value="Non Kategori">Non Kategori</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Lokasi</label>
+                    <input type="text" id="device-location" required class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Contoh: Studio 1, Server Room...">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Crew Yang Bertugas</label>
+                    <input type="text" id="device-crew" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Status</label>
+                    <select id="device-status" required class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                        <option value="Monitoring">Monitoring</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Ready">Ready</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Task Detail</label>
+                    <textarea id="device-task" rows="2" required class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Keterangan tugas atau catatan pekerjaan..."></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeDeviceModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700/50 transition-colors">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Custom Confirm Delete -->
+    <div id="modal-confirm" class="modal fixed inset-0 z-50 justify-center items-center p-4">
+        <div class="glass-panel w-full max-w-sm p-6 rounded-xl text-center space-y-4">
+            <i class="fas fa-exclamation-triangle text-3xl text-yellow-500"></i>
+            <h3 class="text-lg font-bold text-white">Konfirmasi Hapus</h3>
+            <p id="confirm-msg" class="text-sm text-gray-300">Yakin ingin menghapus perangkat ini?</p>
+            <div class="flex justify-center gap-3 pt-2">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-lg text-sm bg-gray-700 hover:bg-gray-600 text-white">Batal</button>
+                <button id="confirm-btn-yes" class="px-4 py-2 rounded-lg text-sm bg-red-600 hover:bg-red-500 text-white">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA STATE & ACTIVE CALENDAR MONTH ---
+        let devices = [];
+        let maintenanceLogs = [];
+        let isLogAuthenticated = false;
+        const ADMIN_LOG_PASSWORD = "admin3tv"; // Password otentikasi log & admin delete
+
+        let activeDate = new Date(); // Default tanggal aktif saat ini (Oktober 2026)
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        function updateMonthLabel() {
+            const m = monthNames[activeDate.getMonth()];
+            const y = activeDate.getFullYear();
+            const labelEl = document.getElementById('active-month-label');
+            if (labelEl) labelEl.innerText = `${m} ${y}`;
+        }
+
+        function changeMonth(direction) {
+            activeDate.setMonth(activeDate.getMonth() + direction);
+            updateMonthLabel();
+            renderDevices();
+        }
+
+        // --- RESPONSIVE SIDEBAR TOGGLE ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        // --- TAB NAVIGATION & AUTH LOCK ---
+        function switchTab(tabId) {
+            if (tabId !== 'log') {
+                isLogAuthenticated = false;
+            }
+
+            ['dashboard', 'daftar-alat', 'log', 'backup'].forEach(t => {
+                const viewEl = document.getElementById(`view-${t}`);
+                const tabEl = document.getElementById(`tab-${t}`);
+                if (viewEl) viewEl.classList.add('hidden');
+                if (tabEl) {
+                    tabEl.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 transition-all text-left font-medium";
+                }
+            });
+
+            const activeView = document.getElementById(`view-${tabId}`);
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeView) activeView.classList.remove('hidden');
+            if (activeTab) {
+                activeTab.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600/30 text-blue-400 border border-blue-500/30 transition-all text-left font-medium";
+            }
+
+            const titles = {
+                'dashboard': 'DASHBOARD UTAMA',
+                'daftar-alat': 'DAFTAR ALAT ITB',
+                'log': 'LOG AKTIVITAS & MAINTENANCE',
+                'backup': 'BACKUP & RESTORE'
+            };
+            const titleEl = document.getElementById('header-title');
+            if (titleEl) titleEl.innerText = titles[tabId] || 'IT BROADCAST 3TV';
+
+            // Auto close sidebar on mobile after choosing tab
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
+            }
+
+            if (tabId === 'dashboard') {
+                updateDashboardStats();
+            }
+        }
+
+        function handleLogMenuClick() {
+            if (isLogAuthenticated) {
+                switchTab('log');
+            } else {
+                document.getElementById('auth-password').value = '';
+                document.getElementById('auth-error').classList.add('hidden');
+                document.getElementById('modal-auth-log').classList.add('active');
+            }
+        }
+
+        function closeAuthModal() {
+            document.getElementById('modal-auth-log').classList.remove('active');
+        }
+
+        function handleAuthLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('auth-password').value;
+            if (pass === ADMIN_LOG_PASSWORD) {
+                isLogAuthenticated = true;
+                closeAuthModal();
+                switchTab('log');
+            } else {
+                document.getElementById('auth-error').classList.remove('hidden');
+            }
+        }
+
+        // --- HELPER: FORMAT TANGGAL ---
+        function getFormattedDate() {
+            const d = new Date();
+            return d.toISOString().split('T')[0];
+        }
+
+        // --- UPDATE DASHBOARD STATS ---
+        function updateDashboardStats() {
+            const total = devices.length;
+            const ready = devices.filter(d => d.status === 'Ready').length;
+            const maint = devices.filter(d => d.status === 'Maintenance').length;
+            const mon = devices.filter(d => d.status === 'Monitoring').length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-ready').innerText = ready;
+            document.getElementById('stat-maint').innerText = maint;
+            document.getElementById('stat-mon').innerText = mon;
+        }
+
+        // --- RENDER PERANGKAT (MENYESUAIKAN BULAN & TAHUN AKTIF) ---
+        function renderDevices() {
+            const tbody = document.getElementById('device-table-body');
+            const emptyState = document.getElementById('device-empty-state');
+            const searchInput = document.getElementById('search-device-input');
+            const keyword = searchInput ? searchInput.value.toLowerCase() : '';
+
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            const targetYear = activeDate.getFullYear();
+            const targetMonth = activeDate.getMonth(); // 0-11
+
+            const filteredDevices = devices.filter(dev => {
+                const devDateStr = dev.date || getFormattedDate();
+                const dObj = new Date(devDateStr);
+                const matchesMonth = dObj.getFullYear() === targetYear && dObj.getMonth() === targetMonth;
+
+                const matchesKeyword = (dev.name && dev.name.toLowerCase().includes(keyword)) ||
+                                       (dev.category && dev.category.toLowerCase().includes(keyword)) ||
+                                       (dev.location && dev.location.toLowerCase().includes(keyword)) ||
+                                       (dev.crew && dev.crew.toLowerCase().includes(keyword)) ||
+                                       (dev.taskDetail && dev.taskDetail.toLowerCase().includes(keyword)) ||
+                                       (devDateStr.toLowerCase().includes(keyword));
+
+                return matchesMonth && matchesKeyword;
+            });
+
+            if (filteredDevices.length === 0) {
+                if (emptyState) {
+                    emptyState.style.display = 'block';
+                    emptyState.innerText = devices.length === 0 ? 'Belum ada data perangkat. Silakan klik "Tambah Perangkat".' : 'Tidak ada data perangkat pada bulan aktif / pencarian ini.';
+                }
+                return;
+            }
+            
+            if (emptyState) emptyState.style.display = 'none';
+            
+            filteredDevices.forEach((dev) => {
+                const realIndex = devices.indexOf(dev);
+
+                let statusColor = "bg-green-500/20 text-green-400 border-green-500/30";
+                if(dev.status === "Maintenance") statusColor = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+                if(dev.status === "Monitoring") statusColor = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono text-gray-300">ITB-${(realIndex+1).toString().padStart(3, '0')}</td>
+                    <td class="py-3 px-4 font-mono text-gray-300">${dev.date || getFormattedDate()}</td>
+                    <td class="py-3 px-4 font-medium text-white">${dev.name}</td>
+                    <td class="py-3 px-4">${dev.category}</td>
+                    <td class="py-3 px-4">${dev.location}</td>
+                    <td class="py-3 px-4">${dev.crew}</td>
+                    <td class="py-3 px-4 text-gray-300 max-w-xs truncate">${dev.taskDetail || '-'}</td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 text-xs rounded-md border ${statusColor}">${dev.status}</span>
+                            <div class="flex items-center gap-1 bg-gray-800/80 px-1.5 py-1 rounded border border-gray-700">
+                                <button onclick="quickChangeStatus(${realIndex}, 'Ready')" title="Set Ready" class="text-green-400 hover:text-green-300 px-1 text-xs"><i class="fas fa-check-circle"></i></button>
+                                <button onclick="quickChangeStatus(${realIndex}, 'Maintenance')" title="Set Maintenance" class="text-yellow-400 hover:text-yellow-300 px-1 text-xs"><i class="fas fa-tools"></i></button>
+                                <button onclick="quickChangeStatus(${realIndex}, 'Monitoring')" title="Set Monitoring" class="text-blue-400 hover:text-blue-300 px-1 text-xs"><i class="fas fa-desktop"></i></button>
+                            </div>
+                            <button onclick="editDevice(${realIndex})" title="Edit" class="text-blue-400 hover:text-blue-300 ml-1 p-1"><i class="fas fa-edit"></i></button>
+                            <button onclick="requestDeleteDevice(${realIndex})" title="Hapus (Admin Only)" class="text-red-400 hover:text-red-300 p-1"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- RENDER LOG ---
+        function renderLogs() {
+            const tbody = document.getElementById('log-table-body');
+            const emptyState = document.getElementById('log-empty-state');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (maintenanceLogs.length === 0) {
+                if (emptyState) emptyState.style.display = 'block';
+                return;
+            }
+            
+            if (emptyState) emptyState.style.display = 'none';
+            maintenanceLogs.forEach((log, index) => {
+                let statusColor = "bg-green-500/20 text-green-400 border-green-500/30";
+                if(log.status === "Maintenance") statusColor = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+                if(log.status === "Monitoring") statusColor = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+                if(log.status === "Delete") statusColor = "bg-red-500/20 text-red-400 border-red-500/30";
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono text-gray-300">${log.date}</td>
+                    <td class="py-3 px-4 font-semibold text-blue-400">${log.type}</td>
+                    <td class="py-3 px-4 font-medium text-white">${log.targetName}</td>
+                    <td class="py-3 px-4 text-gray-400">${log.location}</td>
+                    <td class="py-3 px-4">${log.action}</td>
+                    <td class="py-3 px-4">${log.crew}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 text-xs rounded-md border ${statusColor}">${log.status}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="deleteLog(${index})" class="text-red-400 hover:text-red-300 p-1"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- EXPORT XLSX PROFESIONAL (Hanya data bulan aktif) ---
+        function exportToXLSX() {
+            const targetYear = activeDate.getFullYear();
+            const targetMonth = activeDate.getMonth();
+            const activeMonthStr = document.getElementById('active-month-label').innerText;
+
+            const currentMonthDevices = devices.filter(dev => {
+                const devDateStr = dev.date || getFormattedDate();
+                const dObj = new Date(devDateStr);
+                return dObj.getFullYear() === targetYear && dObj.getMonth() === targetMonth;
+            });
+
+            if (currentMonthDevices.length === 0) {
+                alert(`Tidak ada data perangkat pada bulan ${activeMonthStr} untuk diexport.`);
+                return;
+            }
+
+            const aoaData = [
+                ["MAINTENANCE & MONITORING"],
+                [`Periode Bulan: ${activeMonthStr} | Tanggal Cetak: ${getFormattedDate()}`],
+                [],
+                ["ID Alat", "Tanggal", "Nama Perangkat", "Kategori", "Lokasi", "Crew", "Task Detail", "Status"]
+            ];
+
+            currentMonthDevices.forEach((dev) => {
+                const realIndex = devices.indexOf(dev);
+                aoaData.push([
+                    `ITB-${(realIndex+1).toString().padStart(3, '0')}`,
+                    dev.date || getFormattedDate(),
+                    dev.name || '',
+                    dev.category || '',
+                    dev.location || '',
+                    dev.crew || '',
+                    dev.taskDetail || '',
+                    dev.status || ''
+                ]);
+            });
+
+            const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
+
+            if (worksheet['A1']) {
+                worksheet['A1'].s = {
+                    font: { bold: true, sz: 14, color: { rgb: "2563EB" } }
+                };
+            }
+            if (worksheet['A2']) {
+                worksheet['A2'].s = {
+                    font: { italic: true, sz: 10, color: { rgb: "6B7280" } }
+                };
+            }
+
+            worksheet['!autofilter'] = { ref: `A4:H${aoaData.length}` };
+
+            for (let R = 3; R < aoaData.length; ++R) {
+                for (let C = 0; C <= 7; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!worksheet[cellAddress]) continue;
+
+                    if (R === 3) {
+                        worksheet[cellAddress].s = {
+                            font: { bold: true, color: { rgb: "FFFFFF" } },
+                            fill: { fgColor: { rgb: "1E293B" } },
+                            alignment: { horizontal: "center", vertical: "center" },
+                            border: {
+                                top: { style: "thin", color: { rgb: "CBD5E1" } },
+                                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+                                left: { style: "thin", color: { rgb: "CBD5E1" } },
+                                right: { style: "thin", color: { rgb: "CBD5E1" } }
+                            }
+                        };
+                    } else {
+                        let fillBg = "FFFFFF";
+                        let fontColor = "000000";
+                        const statusVal = aoaData[R][7];
+
+                        if (C === 7) {
+                            if (statusVal === "Ready") { fillBg = "DCFCE7"; fontColor = "166534"; }
+                            else if (statusVal === "Maintenance") { fillBg = "FEF9C3"; fontColor = "854D0E"; }
+                            else if (statusVal === "Monitoring") { fillBg = "DBEAFE"; fontColor = "1E40AF"; }
+                        }
+
+                        worksheet[cellAddress].s = {
+                            alignment: { vertical: "center", wrapText: true },
+                            fill: { fgColor: { rgb: fillBg } },
+                            font: { color: { rgb: fontColor } },
+                            border: {
+                                top: { style: "thin", color: { rgb: "E2E8F0" } },
+                                bottom: { style: "thin", color: { rgb: "E2E8F0" } },
+                                left: { style: "thin", color: { rgb: "E2E8F0" } },
+                                right: { style: "thin", color: { rgb: "E2E8F0" } }
+                            }
+                        };
+                    }
+                }
+            }
+
+            worksheet['!cols'] = [
+                { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 18 }, { wch: 20 }, { wch: 18 }, { wch: 35 }, { wch: 15 }
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Daftar Alat ITB");
+            XLSX.writeFile(workbook, `ITB3TV_DaftarAlat_${activeMonthStr.replace(' ', '_')}.xlsx`);
+        }
+
+        // --- EXPORT PDF (Direct Download menggunakan jsPDF) ---
+        function exportToPDF() {
+            const targetYear = activeDate.getFullYear();
+            const targetMonth = activeDate.getMonth();
+            const activeMonthStr = document.getElementById('active-month-label').innerText;
+
+            const currentMonthDevices = devices.filter(dev => {
+                const devDateStr = dev.date || getFormattedDate();
+                const dObj = new Date(devDateStr);
+                return dObj.getFullYear() === targetYear && dObj.getMonth() === targetMonth;
+            });
+
+            if (currentMonthDevices.length === 0) {
+                alert(`Tidak ada data perangkat pada bulan ${activeMonthStr} untuk diexport PDF.`);
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape A4
+
+            // Header Title
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(37, 99, 235); // Blue
+            doc.text("MAINTENANCE & MONITORING", 14, 15);
+
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(10);
+            doc.setTextColor(107, 114, 128); // Gray
+            doc.text(`Periode Bulan: ${activeMonthStr} | Tanggal Cetak: ${getFormattedDate()}`, 14, 22);
+
+            const tableRows = [];
+            currentMonthDevices.forEach((dev) => {
+                const realIndex = devices.indexOf(dev);
+                tableRows.push([
+                    `ITB-${(realIndex+1).toString().padStart(3, '0')}`,
+                    dev.date || getFormattedDate(),
+                    dev.name || '',
+                    dev.category || '',
+                    dev.location || '',
+                    dev.crew || '',
+                    dev.taskDetail || '',
+                    dev.status || ''
+                ]);
+            });
+
+            doc.autoTable({
+                startY: 26,
+                head: [["ID Alat", "Tanggal", "Nama Perangkat", "Kategori", "Lokasi", "Crew", "Task Detail", "Status"]],
+                body: tableRows,
+                theme: 'grid',
+                headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
+                columnStyles: {
+                    0: { cellWidth: 20 },
+                    1: { cellWidth: 25 },
+                    2: { cellWidth: 40 },
+                    3: { cellWidth: 30 },
+                    4: { cellWidth: 35 },
+                    5: { cellWidth: 30 },
+                    6: { cellWidth: 65 },
+                    7: { cellWidth: 25 }
+                }
+            });
+
+            doc.save(`ITB3TV_DaftarAlat_${activeMonthStr.replace(' ', '_')}.pdf`);
+        }
+
+        // --- DEVICE MODAL HANDLING ---
+        function openDeviceModal() {
+            document.getElementById('device-form').reset();
+            document.getElementById('device-index').value = '';
+            document.getElementById('device-date').value = getFormattedDate(); // Default hari ini
+            document.getElementById('device-modal-title').innerText = "Tambah Perangkat";
+            document.getElementById('modal-device').classList.add('active');
+        }
+
+        function closeDeviceModal() {
+            document.getElementById('modal-device').classList.remove('active');
+        }
+
+        document.getElementById('device-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const index = document.getElementById('device-index').value;
+            const devData = {
+                date: document.getElementById('device-date').value || getFormattedDate(),
+                name: document.getElementById('device-name').value,
+                category: document.getElementById('device-category').value,
+                location: document.getElementById('device-location').value,
+                crew: document.getElementById('device-crew').value,
+                status: document.getElementById('device-status').value,
+                taskDetail: document.getElementById('device-task').value
+            };
+
+            if (index === '') {
+                devices.push(devData);
+                maintenanceLogs.unshift({
+                    id: 'LOG-' + Date.now(),
+                    date: devData.date,
+                    type: 'TAMBAH',
+                    targetName: devData.name,
+                    location: devData.location,
+                    action: `Menambahkan perangkat baru (${devData.taskDetail})`,
+                    crew: devData.crew,
+                    status: devData.status
+                });
+            } else {
+                const idx = parseInt(index);
+                devices[idx] = devData;
+                maintenanceLogs.unshift({
+                    id: 'LOG-' + Date.now(),
+                    date: devData.date,
+                    type: 'EDIT',
+                    targetName: devData.name,
+                    location: devData.location,
+                    action: `Memperbarui data perangkat (${devData.taskDetail})`,
+                    crew: devData.crew,
+                    status: devData.status
+                });
+            }
+            
+            renderDevices();
+            renderLogs();
+            updateDashboardStats();
+            closeDeviceModal();
+        });
+
+        function editDevice(index) {
+            const dev = devices[index];
+            document.getElementById('device-index').value = index;
+            document.getElementById('device-date').value = dev.date || getFormattedDate();
+            document.getElementById('device-name').value = dev.name;
+            document.getElementById('device-category').value = dev.category;
+            document.getElementById('device-location').value = dev.location;
+            document.getElementById('device-crew').value = dev.crew;
+            document.getElementById('device-status').value = dev.status;
+            document.getElementById('device-task').value = dev.taskDetail || '';
+            
+            document.getElementById('device-modal-title').innerText = "Edit Perangkat";
+            document.getElementById('modal-device').classList.add('active');
+        }
+
+        function quickChangeStatus(index, newStatus) {
+            const dev = devices[index];
+            dev.status = newStatus;
+            maintenanceLogs.unshift({
+                id: 'LOG-' + Date.now(),
+                date: getFormattedDate(),
+                type: 'STATUS',
+                targetName: dev.name,
+                location: dev.location,
+                action: `Ubah status cepat ke ${newStatus}`,
+                crew: dev.crew,
+                status: newStatus
+            });
+            renderDevices();
+            renderLogs();
+            updateDashboardStats();
+        }
+
+        // --- ADMIN DELETE AUTH MODAL ---
+        function requestDeleteDevice(index) {
+            document.getElementById('delete-target-index').value = index;
+            document.getElementById('delete-admin-password').value = '';
+            document.getElementById('delete-auth-error').classList.add('hidden');
+            document.getElementById('modal-auth-delete').classList.add('active');
+        }
+
+        function closeDeleteAuthModal() {
+            document.getElementById('modal-auth-delete').classList.remove('active');
+        }
+
+        function handleDeleteAuthLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('delete-admin-password').value;
+            const index = parseInt(document.getElementById('delete-target-index').value);
+
+            if (pass === ADMIN_LOG_PASSWORD) {
+                closeDeleteAuthModal();
+                executeDeleteDevice(index);
+            } else {
+                document.getElementById('delete-auth-error').classList.remove('hidden');
+            }
+        }
+
+        function executeDeleteDevice(index) {
+            const dev = devices[index];
+            devices.splice(index, 1);
+            maintenanceLogs.unshift({
+                id: 'LOG-' + Date.now(),
+                date: getFormattedDate(),
+                type: 'HAPUS',
+                targetName: dev.name,
+                location: dev.location,
+                action: `Menghapus perangkat dari inventaris (Admin)`,
+                crew: dev.crew,
+                status: 'Delete'
+            });
+            renderDevices();
+            renderLogs();
+            updateDashboardStats();
+        }
+
+        function deleteLog(index) {
+            maintenanceLogs.splice(index, 1);
+            renderLogs();
+        }
+
+        // --- BACKUP & RESTORE JSON ---
+        function downloadBackupJSON() {
+            const backupData = {
+                version: "1.0",
+                timestamp: new Date().toISOString(),
+                devices: devices,
+                logs: maintenanceLogs
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `ITB3TV_Backup_${getFormattedDate()}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function restoreBackupJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.devices && Array.isArray(parsed.devices)) {
+                        devices = parsed.devices;
+                        
+                        maintenanceLogs = [];
+                        devices.forEach((dev, idx) => {
+                            maintenanceLogs.push({
+                                id: 'LOG-RESTORE-' + Date.now() + '-' + idx,
+                                date: dev.date || getFormattedDate(),
+                                type: 'RESTORE',
+                                targetName: dev.name,
+                                location: dev.location || 'Local Storage',
+                                action: `Memulihkan perangkat ${dev.name} dari file backup JSON`,
+                                crew: dev.crew || 'Administrator',
+                                status: dev.status || 'Ready'
+                            });
+                        });
+
+                        renderDevices();
+                        renderLogs();
+                        updateDashboardStats();
+                        alert("Data berhasil dipulihkan (Restore) dari file backup!");
+                    } else {
+                        alert("Format file JSON backup tidak valid.");
+                    }
+                } catch (err) {
+                    alert("Gagal membaca file JSON: " + err);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Inisialisasi awal
+        updateMonthLabel();
+        renderDevices();
+        renderLogs();
+        updateDashboardStats();
+    </script>
+</body>
+</html>
