@@ -115,7 +115,7 @@
             </button>
         </nav>
         <div class="p-4 border-t border-gray-700/30 shrink-0">
-            <!-- Tombol Webhook Baru -->
+            <!-- Tombol Webhook -->
             <button onclick="configWebhook()" class="w-full flex items-center justify-center gap-2 px-4 py-2 mb-3 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 transition-all text-xs font-medium">
                 <i class="fas fa-link"></i> Setting Webhook
             </button>
@@ -504,10 +504,13 @@
     </div>
 
     <script>
-        // --- GOOGLE APPS SCRIPT WEBHOOK ENDPOINT (DIBACA DARI LOCALSTORAGE) ---
-        let GOOGLE_SHEETS_WEBHOOK_URL = localStorage.getItem('itb_webhook_url') || ""; 
+        // --- GOOGLE APPS SCRIPT WEBHOOK ENDPOINT (DEFAULT HARCODED DARI USER) ---
+        const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzZzTnWU8yEcoovzuPLBC6sXNBwkvNdVQ7xNILhAk05WXQ8Fy8MiAHbglqKcSYB2PV9/exec";
+        
+        // Membaca dari localStorage jika user pernah mengubahnya via tombol, jika belum pakai URL default
+        let GOOGLE_SHEETS_WEBHOOK_URL = localStorage.getItem('itb_webhook_url') || DEFAULT_WEBHOOK_URL; 
 
-        // Fungsi Baru: Konfigurasi Webhook URL lewat Tombol UI
+        // Fungsi Konfigurasi Webhook URL lewat Tombol UI
         function configWebhook() {
             const url = prompt("Masukkan URL Google Apps Script Webhook Anda:\n(Kosongkan lalu klik OK untuk mematikan fitur Cloud)", GOOGLE_SHEETS_WEBHOOK_URL);
             
@@ -586,11 +589,13 @@
                     renderDevices();
                     renderLogs();
                     updateDashboardStats();
-                    // Alert ini bisa di-comment jika dirasa mengganggu saat auto-sync
-                    // alert("Data berhasil ditarik dan disinkronisasi dari Cloud Server!");
                 }
             } catch (err) {
-                alert("Gagal mengambil data Cloud Sync. Pastikan URL Webhook Anda benar dan memiliki akses 'Anyone' (Siapa saja). Error: " + err);
+                console.log("Auto-sync fetch info:", err);
+                // Hanya memunculkan alert jika tombol ditekan manual (bukan dari auto-load saat pertama buka)
+                if(event && event.type === 'click') {
+                    alert("Gagal mengambil data Cloud Sync. Pastikan URL Webhook Anda benar dan memiliki akses 'Anyone'. Error: " + err);
+                }
             } finally {
                 if(iconSync) iconSync.classList.remove('fa-spin');
             }
@@ -1346,8 +1351,8 @@
         updateDashboardStats();
         loadLiveRSS();
 
-        // Menarik data otomatis saat halaman web pertama kali dibuka, JIKA webhook sudah disetting
-        if (GOOGLE_SHEETS_WEBHOOK_URL !== "https://script.google.com/macros/s/AKfycbzZzTnWU8yEcoovzuPLBC6sXNBwkvNdVQ7xNILhAk05WXQ8Fy8MiAHbglqKcSYB2PV9/exec") {
+        // Menarik data otomatis saat halaman web pertama kali dibuka
+        if (GOOGLE_SHEETS_WEBHOOK_URL !== "") {
             syncFromCloud();
         }
     </script>
