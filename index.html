@@ -11,6 +11,11 @@
     <!-- jsPDF & AutoTable Library untuk Export PDF Profesional -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Firebase App & Cloud Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -42,17 +47,10 @@
             background: rgba(15, 23, 42, 0.8);
         }
 
-        /* Animasi Shimmer / Riak Cahaya & Air pada Sidebar */
         @keyframes sidebarShimmer {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .glass-sidebar {
@@ -66,15 +64,15 @@
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
         }
         ::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
+            border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.3);
@@ -120,7 +118,6 @@
                 <i class="fas fa-database w-5 shrink-0"></i> Backup & Restore
             </button>
         </nav>
-        <!-- Sidebar Watermark Footer (Transparan & Responsif) -->
         <div class="p-4 border-t border-gray-700/30 text-center shrink-0">
             <p class="text-xs text-white/30 font-medium tracking-wide truncate">Create By Surya Ardiansyah</p>
         </div>
@@ -139,76 +136,110 @@
                     <h2 id="header-title" class="text-base md:text-xl font-bold text-white tracking-wide truncate">IT BROADCAST 3TV</h2>
                 </div>
             </div>
-            <button onclick="openDeviceModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 md:px-4 py-2 rounded-lg shadow transition-colors flex items-center gap-2 text-xs md:text-sm font-medium shrink-0">
-                <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah</span> Perangkat
-            </button>
+            <div class="flex items-center gap-3">
+                <div id="sync-status" class="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud & Local Sync
+                </div>
+                <button onclick="openDeviceModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 md:px-4 py-2 rounded-lg shadow transition-colors flex items-center gap-2 text-xs md:text-sm font-medium shrink-0">
+                    <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah</span> Perangkat
+                </button>
+            </div>
         </header>
 
         <!-- Content Area -->
-        <div class="flex-1 overflow-auto p-4 md:p-6 z-0 w-full" id="main-content">
+        <div class="flex-1 overflow-auto p-3 md:p-6 z-0 w-full space-y-6" id="main-content">
             
             <!-- SECTION: DASHBOARD UTAMA -->
             <div id="view-dashboard" class="block space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="glass-panel rounded-xl p-5 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Perangkat</p>
-                            <h3 id="stat-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                <!-- Stat Cards (Clickable) -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div onclick="filterDashboardStat('Total')" class="glass-panel rounded-xl p-3.5 md:p-5 flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition-all group">
+                        <div class="min-w-0">
+                            <p class="text-[11px] md:text-xs text-gray-400 font-medium uppercase tracking-wider group-hover:text-white transition-colors truncate">Total Perangkat</p>
+                            <h3 id="stat-total" class="text-xl md:text-2xl font-bold text-white mt-1">0</h3>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl border border-blue-500/30">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg md:text-xl border border-blue-500/30 shrink-0 group-hover:scale-105 transition-transform">
                             <i class="fas fa-server"></i>
                         </div>
                     </div>
-                    <div class="glass-panel rounded-xl p-5 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Ready</p>
-                            <h3 id="stat-ready" class="text-2xl font-bold text-green-400 mt-1">0</h3>
+                    <div onclick="filterDashboardStat('Ready')" class="glass-panel rounded-xl p-3.5 md:p-5 flex items-center justify-between cursor-pointer hover:border-green-500/50 transition-all group">
+                        <div class="min-w-0">
+                            <p class="text-[11px] md:text-xs text-gray-400 font-medium uppercase tracking-wider group-hover:text-green-300 transition-colors truncate">Ready</p>
+                            <h3 id="stat-ready" class="text-xl md:text-2xl font-bold text-green-400 mt-1">0</h3>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center text-xl border border-green-500/30">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center text-lg md:text-xl border border-green-500/30 shrink-0 group-hover:scale-105 transition-transform">
                             <i class="fas fa-check-circle"></i>
                         </div>
                     </div>
-                    <div class="glass-panel rounded-xl p-5 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Maintenance</p>
-                            <h3 id="stat-maint" class="text-2xl font-bold text-yellow-400 mt-1">0</h3>
+                    <div onclick="filterDashboardStat('Maintenance')" class="glass-panel rounded-xl p-3.5 md:p-5 flex items-center justify-between cursor-pointer hover:border-yellow-500/50 transition-all group">
+                        <div class="min-w-0">
+                            <p class="text-[11px] md:text-xs text-gray-400 font-medium uppercase tracking-wider group-hover:text-yellow-300 transition-colors truncate">Maintenance</p>
+                            <h3 id="stat-maint" class="text-xl md:text-2xl font-bold text-yellow-400 mt-1">0</h3>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-xl border border-yellow-500/30">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-lg md:text-xl border border-yellow-500/30 shrink-0 group-hover:scale-105 transition-transform">
                             <i class="fas fa-tools"></i>
                         </div>
                     </div>
-                    <div class="glass-panel rounded-xl p-5 flex items-center justify-between">
-                        <div>
-                            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Monitoring</p>
-                            <h3 id="stat-mon" class="text-2xl font-bold text-blue-400 mt-1">0</h3>
+                    <div onclick="filterDashboardStat('Monitoring')" class="glass-panel rounded-xl p-3.5 md:p-5 flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition-all group">
+                        <div class="min-w-0">
+                            <p class="text-[11px] md:text-xs text-gray-400 font-medium uppercase tracking-wider group-hover:text-blue-300 transition-colors truncate">Monitoring</p>
+                            <h3 id="stat-mon" class="text-xl md:text-2xl font-bold text-blue-400 mt-1">0</h3>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl border border-blue-500/30">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg md:text-xl border border-blue-500/30 shrink-0 group-hover:scale-105 transition-transform">
                             <i class="fas fa-desktop"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="glass-panel rounded-xl p-5">
-                        <h3 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                            <i class="fas fa-info-circle text-blue-400"></i> Ringkasan Sistem ITB 3TV
+                <!-- Area Grid Card Berdasarkan Stat yang Diklik -->
+                <div id="dashboard-card-section" class="glass-panel rounded-xl p-4 md:p-5 hidden space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-700/50 pb-3">
+                        <h3 class="text-xs md:text-sm font-bold text-white flex items-center gap-2 truncate pr-2">
+                            <i class="fas fa-filter text-blue-400 shrink-0"></i> <span id="dashboard-card-title-text" class="truncate">Daftar Alat</span>
                         </h3>
-                        <p class="text-xs text-gray-300 leading-relaxed">
-                            Dashboard interaktif ini dirancang khusus untuk manajemen operasional broadcast IT, pelacakan inventaris perangkat, serta pencatatan log maintenance real-time lintas divisi di bawah naungan media business units. Gunakan menu sidebar untuk navigasi cepat antar fitur.
-                        </p>
+                        <button onclick="closeDashboardCards()" class="text-gray-400 hover:text-white text-xs bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 transition-colors flex items-center gap-1.5 shrink-0">
+                            <i class="fas fa-times"></i> Tutup
+                        </button>
                     </div>
-                    <div class="glass-panel rounded-xl p-5">
-                        <h3 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                            <i class="fas fa-bolt text-yellow-400"></i> Aksi Cepat
+                    <div id="dashboard-card-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 max-h-[450px] overflow-y-auto pr-1">
+                        <!-- Dynamic Cards Di Sini -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                    <!-- LIVE RSS FEED CARD (Vertical Running Text) -->
+                    <div class="glass-panel rounded-xl p-4 md:p-5 flex flex-col h-[230px]">
+                        <h3 class="text-xs md:text-sm font-semibold text-white mb-3 flex items-center justify-between shrink-0">
+                            <span class="flex items-center gap-2">
+                                <i class="fas fa-rss text-orange-400 animate-pulse"></i> Live RSS Feed (Berita Terkini)
+                            </span>
+                            <span id="rss-status" class="text-[10px] text-gray-400 font-mono">Memuat...</span>
                         </h3>
-                        <div class="flex flex-wrap gap-3">
-                            <button onclick="switchTab('daftar-alat')" class="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white px-4 py-2 rounded-lg text-xs font-medium border border-blue-500/30 transition-colors">
+                        <div id="rss-ticker-container" class="flex-1 overflow-hidden relative">
+                            <div id="rss-items-wrapper" class="space-y-3">
+                                <div class="text-xs text-gray-400 text-center py-8">Memuat live feed...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACTION CARD -->
+                    <div class="glass-panel rounded-xl p-4 md:p-5 flex flex-col justify-between h-[230px]">
+                        <div>
+                            <h3 class="text-xs md:text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                                <i class="fas fa-bolt text-yellow-400"></i> Aksi Cepat
+                            </h3>
+                            <p class="text-xs text-gray-300 leading-relaxed mb-4">
+                                Kelola inventaris alat broadcast, pantau status operasional secara real-time, cetak laporan, atau lakukan backup data dengan mudah.
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-2.5">
+                            <button onclick="switchTab('daftar-alat')" class="bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white px-3.5 py-2 rounded-lg text-xs font-medium border border-blue-500/30 transition-colors">
                                 Kelola Daftar Alat
                             </button>
-                            <button onclick="openDeviceModal()" class="bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-4 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors">
+                            <button onclick="openDeviceModal()" class="bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-3.5 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors">
                                 Tambah Perangkat Baru
                             </button>
-                            <button onclick="switchTab('backup')" class="bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 rounded-lg text-xs font-medium border border-gray-600 transition-colors">
+                            <button onclick="switchTab('backup')" class="bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white px-3.5 py-2 rounded-lg text-xs font-medium border border-gray-600 transition-colors">
                                 Backup / Restore JSON
                             </button>
                         </div>
@@ -232,46 +263,48 @@
                     </button>
                 </div>
 
-                <div class="glass-panel rounded-xl p-4 md:p-6">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                        <div class="w-full md:w-auto flex-1 max-w-md">
+                <div class="glass-panel rounded-xl p-3 md:p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-4 md:mb-6">
+                        <div class="w-full sm:flex-1 sm:max-w-md">
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                                    <i class="fas fa-search"></i>
+                                    <i class="fas fa-search text-xs"></i>
                                 </span>
-                                <input type="text" id="search-device-input" oninput="renderDevices()" placeholder="Cari nama perangkat, kategori, lokasi, crew..." class="glass-input w-full pl-10 pr-4 py-2 rounded-lg text-xs md:text-sm">
+                                <input type="text" id="search-device-input" oninput="renderDevices()" placeholder="Cari perangkat, kategori, lokasi..." class="glass-input w-full pl-9 pr-3 py-2 rounded-lg text-xs md:text-sm">
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-                            <button onclick="exportToXLSX()" class="bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-file-excel"></i> Export to XLSX
+                        <div class="flex items-center gap-2 justify-end">
+                            <button onclick="exportToXLSX()" class="flex-1 sm:flex-none bg-green-600/30 hover:bg-green-600 text-green-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-green-500/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-file-excel"></i> XLSX
                             </button>
-                            <button onclick="exportToPDF()" class="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 transition-colors flex items-center gap-1.5 cursor-pointer">
-                                <i class="fas fa-file-pdf"></i> Export to PDF
+                            <button onclick="exportToPDF()" class="flex-1 sm:flex-none bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-red-500/30 transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fas fa-file-pdf"></i> PDF
                             </button>
                         </div>
                     </div>
                     
-                    <div class="overflow-x-auto w-full">
-                        <table class="w-full text-left border-collapse min-w-[750px]">
+                    <!-- Responsive Table Container -->
+                    <div class="w-full overflow-x-auto rounded-lg border border-gray-700/50">
+                        <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
                             <thead>
-                                <tr class="border-b border-gray-600/50 text-gray-400 text-xs md:text-sm">
-                                    <th class="py-3 px-4 font-medium">ID Alat</th>
-                                    <th class="py-3 px-4 font-medium">Tanggal</th>
-                                    <th class="py-3 px-4 font-medium">Nama Perangkat</th>
-                                    <th class="py-3 px-4 font-medium">Kategori</th>
-                                    <th class="py-3 px-4 font-medium">Lokasi</th>
-                                    <th class="py-3 px-4 font-medium">Crew</th>
-                                    <th class="py-3 px-4 font-medium">Task Detail</th>
-                                    <th class="py-3 px-4 font-medium">Status & Aksi Cepat</th>
+                                <tr class="border-b border-gray-700 bg-slate-800/40 text-gray-400 text-xs md:text-sm uppercase tracking-wider">
+                                    <th class="py-3 px-3 font-semibold">ID Alat</th>
+                                    <th class="py-3 px-3 font-semibold">Tanggal</th>
+                                    <th class="py-3 px-3 font-semibold">Nama Perangkat</th>
+                                    <th class="py-3 px-3 font-semibold">Qty</th>
+                                    <th class="py-3 px-3 font-semibold">Kategori</th>
+                                    <th class="py-3 px-3 font-semibold">Lokasi</th>
+                                    <th class="py-3 px-3 font-semibold">Crew</th>
+                                    <th class="py-3 px-3 font-semibold">Task Detail</th>
+                                    <th class="py-3 px-3 font-semibold text-center">Status & Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="device-table-body" class="text-xs md:text-sm divide-y divide-gray-700/50">
-                                <!-- Data Kosong -->
+                            <tbody id="device-table-body" class="text-xs md:text-sm divide-y divide-gray-700/40">
+                                <!-- Data Kosong / Dinamis -->
                             </tbody>
                         </table>
-                        <div id="device-empty-state" class="text-center py-10 text-gray-500 text-sm">
-                            Belum ada data perangkat pada bulan ini.
+                        <div id="device-empty-state" class="text-center py-10 text-gray-400 text-xs md:text-sm">
+                            Memuat data perangkat...
                         </div>
                     </div>
                 </div>
@@ -280,35 +313,35 @@
             <!-- SECTION: LOG -->
             <div id="view-log" class="hidden space-y-6">
                 <div class="glass-panel rounded-xl p-4 md:p-6">
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
                         <div>
-                            <h3 class="text-base md:text-lg font-semibold text-white">Log Aktivitas & Maintenance</h3>
-                            <p class="text-xs md:text-sm text-gray-400 mt-1">Dicatat otomatis dari penambahan, edit, perubahan status cepat, restore, dan penghapusan alat.</p>
+                            <h3 class="text-sm md:text-base font-semibold text-white">Log Aktivitas & Maintenance</h3>
+                            <p class="text-[11px] md:text-xs text-gray-400 mt-0.5">Dicatat otomatis dari penambahan, edit, status, restore, dan penghapusan.</p>
                         </div>
-                        <button onclick="switchTab('daftar-alat')" class="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-colors border border-red-500/30 flex items-center gap-1.5">
+                        <button onclick="switchTab('daftar-alat')" class="bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-colors border border-red-500/30 flex items-center gap-1.5 shrink-0">
                             <i class="fas fa-lock"></i> Kunci Log
                         </button>
                     </div>
-                    <div class="overflow-x-auto w-full">
-                        <table class="w-full text-left border-collapse min-w-[850px]">
+                    <div class="w-full overflow-x-auto rounded-lg border border-gray-700/50">
+                        <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
                             <thead>
-                                <tr class="border-b border-gray-600/50 text-gray-400 text-xs md:text-sm">
-                                    <th class="py-3 px-4 font-medium">Tanggal</th>
-                                    <th class="py-3 px-4 font-medium">Tipe</th>
-                                    <th class="py-3 px-4 font-medium">Perangkat</th>
-                                    <th class="py-3 px-4 font-medium">Lokasi</th>
-                                    <th class="py-3 px-4 font-medium">Aktivitas / Keterangan</th>
-                                    <th class="py-3 px-4 font-medium">Crew</th>
-                                    <th class="py-3 px-4 font-medium">Status</th>
-                                    <th class="py-3 px-4 font-medium text-right">Aksi</th>
+                                <tr class="border-b border-gray-700 bg-slate-800/40 text-gray-400 text-xs md:text-sm uppercase tracking-wider">
+                                    <th class="py-3 px-3 font-semibold">Tanggal</th>
+                                    <th class="py-3 px-3 font-semibold">Tipe</th>
+                                    <th class="py-3 px-3 font-semibold">Perangkat</th>
+                                    <th class="py-3 px-3 font-semibold">Lokasi</th>
+                                    <th class="py-3 px-3 font-semibold">Aktivitas / Keterangan</th>
+                                    <th class="py-3 px-3 font-semibold">Crew</th>
+                                    <th class="py-3 px-3 font-semibold">Status</th>
+                                    <th class="py-3 px-3 font-semibold text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="log-table-body" class="text-xs md:text-sm divide-y divide-gray-700/50">
+                            <tbody id="log-table-body" class="text-xs md:text-sm divide-y divide-gray-700/40">
                                 <!-- Data Log Otomatis -->
                             </tbody>
                         </table>
-                        <div id="log-empty-state" class="text-center py-10 text-gray-500 text-sm">
-                            Belum ada log aktivitas. Log akan terisi otomatis saat perangkat dikelola.
+                        <div id="log-empty-state" class="text-center py-10 text-gray-400 text-xs md:text-sm">
+                            Belum ada log aktivitas.
                         </div>
                     </div>
                 </div>
@@ -318,14 +351,14 @@
             <div id="view-backup" class="hidden space-y-6">
                 <div class="glass-panel rounded-xl p-6 md:p-10 max-w-xl mx-auto text-center space-y-6">
                     <i class="fas fa-database text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-white">Backup & Restore Data Lokal</h3>
-                    <p class="text-sm text-gray-400">Amankan data inventaris dan log Anda ke dalam file JSON di perangkat atau pulihkan kembali dari cadangan sebelumnya.</p>
+                    <h3 class="text-lg md:text-xl font-bold text-white">Backup & Restore Data Lokal / Cloud</h3>
+                    <p class="text-xs md:text-sm text-gray-400">Amankan data inventaris dan log Anda ke dalam file JSON di perangkat atau pulihkan kembali dari cadangan sebelumnya.</p>
                     
-                    <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-                        <button onclick="downloadBackupJSON()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2">
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                        <button onclick="downloadBackupJSON()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg font-medium text-xs md:text-sm transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-download"></i> Download Backup (JSON)
                         </button>
-                        <label class="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                        <label class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg font-medium text-xs md:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer">
                             <i class="fas fa-upload"></i> Restore Data (JSON)
                             <input type="file" id="restore-file-input" accept=".json" onchange="restoreBackupJSON(event)" class="hidden">
                         </label>
@@ -377,7 +410,7 @@
                 <p class="text-xs text-gray-400 mt-1">Masukkan password admin untuk menghapus data perangkat.</p>
             </div>
             <form id="delete-auth-form" class="space-y-4" onsubmit="handleDeleteAuthLogin(event)">
-                <input type="hidden" id="delete-target-index">
+                <input type="hidden" id="delete-target-id">
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Password Admin</label>
                     <input type="password" id="delete-admin-password" required class="glass-input w-full px-3 py-2 rounded-lg text-sm" placeholder="Masukkan password...">
@@ -393,13 +426,13 @@
 
     <!-- MODAL: Tambah/Edit Perangkat -->
     <div id="modal-device" class="modal fixed inset-0 z-50 justify-center items-center p-4">
-        <div class="glass-panel w-full max-w-lg p-6 rounded-xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="glass-panel w-full max-w-xl p-5 md:p-6 rounded-xl relative shadow-2xl max-h-[90vh] overflow-y-auto">
             <button onclick="closeDeviceModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
                 <i class="fas fa-times"></i>
             </button>
-            <h3 class="text-xl font-bold mb-4 text-white" id="device-modal-title">Tambah Perangkat</h3>
+            <h3 class="text-lg md:text-xl font-bold mb-4 text-white" id="device-modal-title">Tambah Perangkat</h3>
             <form id="device-form" class="space-y-4">
-                <input type="hidden" id="device-index">
+                <input type="hidden" id="device-id">
                 
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Tanggal</label>
@@ -409,7 +442,7 @@
                 <!-- Multiple Device Input Container -->
                 <div id="multiple-device-container" class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <label class="block text-xs font-medium text-gray-400">Daftar Perangkat & Kategori</label>
+                        <label class="block text-xs font-medium text-gray-400">Daftar Perangkat, Qty & Kategori</label>
                         <button type="button" onclick="addDeviceRow()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium">
                             <i class="fas fa-plus-circle"></i> Tambah Baris Alat
                         </button>
@@ -420,22 +453,28 @@
                 </div>
 
                 <div id="single-device-edit-fields" class="space-y-4 hidden">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1">Nama Perangkat</label>
-                        <input type="text" id="single-device-name" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Nama Perangkat</label>
+                            <input type="text" id="single-device-name" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                        <div class="w-20 md:w-24">
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Qty</label>
+                            <input type="number" id="single-device-qty" min="1" value="1" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1">Kategori</label>
                         <select id="single-device-category" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
                             <option value="PC Broadcast">PC Broadcast</option>
                             <option value="Graphics System">Graphics System</option>
-                            <option value="Replay Server">Replay Server</option>
                             <option value="Video Server">Video Server</option>
                             <option value="Sound Card">Sound Card</option>
                             <option value="Network Switch">Network Switch</option>
-                            <option value="IO External">IO External</option>
                             <option value="Server">Server</option>
-                            <option value="Non Kategori">Non Kategori</option>
+                            <option value="Mini Switcher">Mini Switcher</option>
+                            <option value="Alat Record">Alat Record</option>
+                            <option value="Lainnya">Lainnya</option>
                         </select>
                     </div>
                 </div>
@@ -456,6 +495,7 @@
                         <option value="Monitoring">Monitoring</option>
                         <option value="Maintenance">Maintenance</option>
                         <option value="Ready">Ready</option>
+                        <option value="Rusak">Rusak</option>
                     </select>
                 </div>
 
@@ -472,28 +512,74 @@
         </div>
     </div>
 
-    <!-- MODAL: Custom Confirm Delete -->
-    <div id="modal-confirm" class="modal fixed inset-0 z-50 justify-center items-center p-4">
-        <div class="glass-panel w-full max-w-sm p-6 rounded-xl text-center space-y-4">
-            <i class="fas fa-exclamation-triangle text-3xl text-yellow-500"></i>
-            <h3 class="text-lg font-bold text-white">Konfirmasi Hapus</h3>
-            <p id="confirm-msg" class="text-sm text-gray-300">Yakin ingin menghapus perangkat ini?</p>
-            <div class="flex justify-center gap-3 pt-2">
-                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-lg text-sm bg-gray-700 hover:bg-gray-600 text-white">Batal</button>
-                <button id="confirm-btn-yes" class="px-4 py-2 rounded-lg text-sm bg-red-600 hover:bg-red-500 text-white">Hapus</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // --- DATA STATE & ACTIVE CALENDAR MONTH ---
+        // --- 1. KONFIGURASI FIREBASE (Opsional / Aktif jika diisi) ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "your-sender-id",
+            appId: "your-app-id"
+        };
+
+        let db = null;
+        try {
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+            }
+        } catch (e) {
+            console.log("Firebase tidak dikonfigurasi, berjalan dengan mode LocalStorage saja.");
+        }
+
+        // --- DATA STATE & LOCALSTORAGE ---
         let devices = [];
         let maintenanceLogs = [];
         let isLogAuthenticated = false;
-        const ADMIN_LOG_PASSWORD = "admin3tv"; // Password otentikasi log & admin delete
+        const ADMIN_LOG_PASSWORD = "admin3tv";
 
-        let activeDate = new Date(); // Default tanggal aktif saat ini (Oktober 2026)
+        let activeDate = new Date();
         const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        function loadFromLocalStorage() {
+            const savedDevices = localStorage.getItem('itb_devices');
+            const savedLogs = localStorage.getItem('itb_logs');
+            if (savedDevices) {
+                try { devices = JSON.parse(savedDevices); } catch (e) { devices = []; }
+            }
+            if (savedLogs) {
+                try { maintenanceLogs = JSON.parse(savedLogs); } catch (e) { maintenanceLogs = []; }
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('itb_devices', JSON.stringify(devices));
+            localStorage.setItem('itb_logs', JSON.stringify(maintenanceLogs));
+        }
+
+        // --- SYNC DENGAN FIRESTORE JIKA AKTIF ---
+        function initFirestoreSync() {
+            if (!db) return;
+            db.collection("itb_devices").onSnapshot((snapshot) => {
+                devices = [];
+                snapshot.forEach((doc) => {
+                    devices.push({ id: doc.id, ...doc.data() });
+                });
+                saveToLocalStorage();
+                renderDevices();
+                updateDashboardStats();
+            });
+
+            db.collection("itb_logs").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                maintenanceLogs = [];
+                snapshot.forEach((doc) => {
+                    maintenanceLogs.push({ id: doc.id, ...doc.data() });
+                });
+                saveToLocalStorage();
+                renderLogs();
+            });
+        }
 
         function updateMonthLabel() {
             const m = monthNames[activeDate.getMonth()];
@@ -506,9 +592,152 @@
             activeDate.setMonth(activeDate.getMonth() + direction);
             updateMonthLabel();
             renderDevices();
+            closeDashboardCards();
         }
 
-        // --- RESPONSIVE SIDEBAR TOGGLE ---
+        // --- LIVE RSS TICKER LOGIC (Vertical Running Text) ---
+        let tickerInterval = null;
+        async function loadLiveRSS() {
+            const wrapper = document.getElementById('rss-items-wrapper');
+            const statusEl = document.getElementById('rss-status');
+            if (!wrapper) return;
+
+            try {
+                const rssUrl = 'https://news.google.com/rss?hl=id&gl=ID&ceid=ID:id';
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+
+                if (data.contents) {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+                    const items = xmlDoc.querySelectorAll("item");
+
+                    if (items.length > 0) {
+                        statusEl.innerText = 'Live';
+                        wrapper.innerHTML = '';
+                        
+                        for (let i = 0; i < Math.min(items.length, 10); i++) {
+                            const item = items[i];
+                            const title = item.querySelector("title") ? item.querySelector("title").textContent : "Tanpa Judul";
+                            const link = item.querySelector("link") ? item.querySelector("link").textContent : "#";
+                            const pubDate = item.querySelector("pubDate") ? item.querySelector("pubDate").textContent : "";
+                            
+                            const dateObj = new Date(pubDate);
+                            const timeStr = !isNaN(dateObj) ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                            const itemEl = document.createElement('div');
+                            itemEl.className = "text-xs border-b border-gray-700/40 pb-2.5 flex flex-col gap-1 rss-feed-item";
+                            itemEl.innerHTML = `
+                                <div class="flex items-center justify-between text-[10px] text-gray-400 font-mono">
+                                    <span><i class="far fa-clock mr-1"></i>${timeStr}</span>
+                                    <span class="text-blue-400 truncate max-w-[120px]">Google News</span>
+                                </div>
+                                <a href="${link}" target="_blank" class="text-gray-200 hover:text-blue-400 font-medium transition-colors line-clamp-1">${title}</a>
+                            `;
+                            wrapper.appendChild(itemEl);
+                        }
+
+                        startVerticalTicker();
+                    } else {
+                        throw new Error("Format XML kosong");
+                    }
+                } else {
+                    throw new Error("Gagal mengambil data dari proxy");
+                }
+            } catch (err) {
+                console.error("RSS Error:", err);
+                statusEl.innerText = 'Offline';
+                wrapper.innerHTML = '<div class="text-xs text-gray-400 text-center py-8">Feed berita sedang tidak tersedia.</div>';
+            }
+        }
+
+        function startVerticalTicker() {
+            const container = document.getElementById('rss-ticker-container');
+            const wrapper = document.getElementById('rss-items-wrapper');
+            if (!container || !wrapper) return;
+
+            if (tickerInterval) clearInterval(tickerInterval);
+
+            tickerInterval = setInterval(() => {
+                if (container.matches(':hover')) return; // Jeda saat kursor diarahkan ke card
+                const firstChild = wrapper.firstElementChild;
+                if (firstChild) {
+                    wrapper.style.transition = 'transform 0.5s ease-in-out';
+                    const itemHeight = firstChild.offsetHeight + 12;
+                    wrapper.style.transform = `translateY(-${itemHeight}px)`;
+
+                    setTimeout(() => {
+                        wrapper.style.transition = 'none';
+                        wrapper.style.transform = 'translateY(0)';
+                        wrapper.appendChild(firstChild);
+                    }, 500);
+                }
+            }, 3500);
+        }
+
+        // --- INTERAKTIF: FILTER STATS CARD DI DASHBOARD UTAMA ---
+        function filterDashboardStat(status) {
+            const section = document.getElementById('dashboard-card-section');
+            const titleText = document.getElementById('dashboard-card-title-text');
+            const grid = document.getElementById('dashboard-card-grid');
+            if (!section || !grid) return;
+
+            const targetYear = activeDate.getFullYear();
+            const targetMonth = activeDate.getMonth();
+
+            const monthDevices = devices.filter(dev => {
+                const devDateStr = dev.date || getFormattedDate();
+                const dObj = new Date(devDateStr);
+                return dObj.getFullYear() === targetYear && dObj.getMonth() === targetMonth;
+            });
+
+            const filtered = status === 'Total' ? monthDevices : monthDevices.filter(d => d.status === status);
+            const totalQty = filtered.reduce((acc, curr) => acc + (parseInt(curr.qty) || 1), 0);
+
+            titleText.innerText = `Daftar Alat (${status}) — ${monthNames[targetMonth]} ${targetYear} (Total Qty: ${totalQty})`;
+            grid.innerHTML = '';
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-8 text-gray-400 text-xs md:text-sm">Tidak ada perangkat dengan status "${status}" pada bulan ini.</div>`;
+            } else {
+                filtered.forEach((dev, idx) => {
+                    let statusColor = "bg-green-500/20 text-green-400 border-green-500/30";
+                    if(dev.status === "Maintenance") statusColor = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+                    if(dev.status === "Monitoring") statusColor = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+                    if(dev.status === "Rusak") statusColor = "bg-red-500/20 text-red-400 border-red-500/30";
+
+                    const card = document.createElement('div');
+                    card.className = "glass-panel rounded-lg p-3.5 space-y-2 border border-white/5 hover:border-blue-500/40 transition-all";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-mono text-blue-400">ITB-${(idx+1).toString().padStart(3, '0')}</span>
+                            <span class="px-2 py-0.5 text-[11px] rounded border ${statusColor}">${dev.status}</span>
+                        </div>
+                        <h4 class="font-bold text-white text-xs md:text-sm truncate">${dev.name}</h4>
+                        <div class="text-[11px] md:text-xs text-gray-300 space-y-1 pt-1">
+                            <p><strong class="text-gray-400">Qty:</strong> <span class="text-blue-300 font-mono">${dev.qty || 1}</span></p>
+                            <p><strong class="text-gray-400">Kategori:</strong> ${dev.category}</p>
+                            <p><strong class="text-gray-400">Lokasi:</strong> ${dev.location}</p>
+                            <p><strong class="text-gray-400">Crew:</strong> ${dev.crew}</p>
+                            <p><strong class="text-gray-400">Task:</strong> ${dev.taskDetail || '-'}</p>
+                            <p><strong class="text-gray-400">Tanggal:</strong> ${dev.date || getFormattedDate()}</p>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            section.classList.remove('hidden');
+        }
+
+        function closeDashboardCards() {
+            const section = document.getElementById('dashboard-card-section');
+            if (section) section.classList.add('hidden');
+        }
+
+        // --- SIDEBAR & NAVIGASI ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -516,27 +745,20 @@
             overlay.classList.toggle('hidden');
         }
 
-        // --- TAB NAVIGATION & AUTH LOCK ---
         function switchTab(tabId) {
-            if (tabId !== 'log') {
-                isLogAuthenticated = false;
-            }
+            if (tabId !== 'log') isLogAuthenticated = false;
 
             ['dashboard', 'daftar-alat', 'log', 'backup'].forEach(t => {
                 const viewEl = document.getElementById(`view-${t}`);
                 const tabEl = document.getElementById(`tab-${t}`);
                 if (viewEl) viewEl.classList.add('hidden');
-                if (tabEl) {
-                    tabEl.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 transition-all text-left font-medium";
-                }
+                if (tabEl) tabEl.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 transition-all text-left font-medium";
             });
 
             const activeView = document.getElementById(`view-${tabId}`);
             const activeTab = document.getElementById(`tab-${tabId}`);
             if (activeView) activeView.classList.remove('hidden');
-            if (activeTab) {
-                activeTab.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600/30 text-blue-400 border border-blue-500/30 transition-all text-left font-medium";
-            }
+            if (activeTab) activeTab.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600/30 text-blue-400 border border-blue-500/30 transition-all text-left font-medium";
 
             const titles = {
                 'dashboard': 'DASHBOARD UTAMA',
@@ -558,6 +780,7 @@
 
             if (tabId === 'dashboard') {
                 updateDashboardStats();
+                closeDashboardCards();
             }
         }
 
@@ -587,18 +810,16 @@
             }
         }
 
-        // --- HELPER: FORMAT TANGGAL ---
         function getFormattedDate() {
             const d = new Date();
             return d.toISOString().split('T')[0];
         }
 
-        // --- UPDATE DASHBOARD STATS ---
         function updateDashboardStats() {
-            const total = devices.length;
-            const ready = devices.filter(d => d.status === 'Ready').length;
-            const maint = devices.filter(d => d.status === 'Maintenance').length;
-            const mon = devices.filter(d => d.status === 'Monitoring').length;
+            const total = devices.reduce((acc, curr) => acc + (parseInt(curr.qty) || 1), 0);
+            const ready = devices.filter(d => d.status === 'Ready').reduce((acc, curr) => acc + (parseInt(curr.qty) || 1), 0);
+            const maint = devices.filter(d => d.status === 'Maintenance').reduce((acc, curr) => acc + (parseInt(curr.qty) || 1), 0);
+            const mon = devices.filter(d => d.status === 'Monitoring').reduce((acc, curr) => acc + (parseInt(curr.qty) || 1), 0);
 
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-ready').innerText = ready;
@@ -606,7 +827,7 @@
             document.getElementById('stat-mon').innerText = mon;
         }
 
-        // --- RENDER PERANGKAT ---
+        // --- RENDER TABEL PERANGKAT ---
         function renderDevices() {
             const tbody = document.getElementById('device-table-body');
             const emptyState = document.getElementById('device-empty-state');
@@ -644,32 +865,35 @@
             
             if (emptyState) emptyState.style.display = 'none';
             
-            filteredDevices.forEach((dev) => {
-                const realIndex = devices.indexOf(dev);
+            filteredDevices.forEach((dev, idx) => {
+                const uniqueKey = dev.id || idx;
 
                 let statusColor = "bg-green-500/20 text-green-400 border-green-500/30";
                 if(dev.status === "Maintenance") statusColor = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
                 if(dev.status === "Monitoring") statusColor = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+                if(dev.status === "Rusak") statusColor = "bg-red-500/20 text-red-400 border-red-500/30";
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="py-3 px-4 font-mono text-gray-300">ITB-${(realIndex+1).toString().padStart(3, '0')}</td>
-                    <td class="py-3 px-4 font-mono text-gray-300">${dev.date || getFormattedDate()}</td>
-                    <td class="py-3 px-4 font-medium text-white">${dev.name}</td>
-                    <td class="py-3 px-4">${dev.category}</td>
-                    <td class="py-3 px-4">${dev.location}</td>
-                    <td class="py-3 px-4">${dev.crew}</td>
-                    <td class="py-3 px-4 text-gray-300 max-w-xs truncate">${dev.taskDetail || '-'}</td>
-                    <td class="py-3 px-4">
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-1 text-xs rounded-md border ${statusColor}">${dev.status}</span>
-                            <div class="flex items-center gap-1 bg-gray-800/80 px-1.5 py-1 rounded border border-gray-700">
-                                <button onclick="quickChangeStatus(${realIndex}, 'Ready')" title="Set Ready" class="text-green-400 hover:text-green-300 px-1 text-xs"><i class="fas fa-check-circle"></i></button>
-                                <button onclick="quickChangeStatus(${realIndex}, 'Maintenance')" title="Set Maintenance" class="text-yellow-400 hover:text-yellow-300 px-1 text-xs"><i class="fas fa-tools"></i></button>
-                                <button onclick="quickChangeStatus(${realIndex}, 'Monitoring')" title="Set Monitoring" class="text-blue-400 hover:text-blue-300 px-1 text-xs"><i class="fas fa-desktop"></i></button>
+                    <td class="py-2.5 px-3 font-mono text-gray-300">ITB-${(idx+1).toString().padStart(3, '0')}</td>
+                    <td class="py-2.5 px-3 font-mono text-gray-300">${dev.date || getFormattedDate()}</td>
+                    <td class="py-2.5 px-3 font-medium text-white">${dev.name}</td>
+                    <td class="py-2.5 px-3 font-mono text-blue-300">${dev.qty || 1}</td>
+                    <td class="py-2.5 px-3 text-gray-300">${dev.category}</td>
+                    <td class="py-2.5 px-3 text-gray-300">${dev.location}</td>
+                    <td class="py-2.5 px-3 text-gray-300">${dev.crew}</td>
+                    <td class="py-2.5 px-3 text-gray-300 max-w-[200px] truncate" title="${dev.taskDetail || '-'}">${dev.taskDetail || '-'}</td>
+                    <td class="py-2.5 px-3">
+                        <div class="flex items-center justify-end md:justify-start gap-2">
+                            <span class="px-2 py-0.5 text-[11px] rounded-md border ${statusColor}">${dev.status}</span>
+                            <div class="flex items-center gap-1 bg-gray-800/80 px-1.5 py-0.5 rounded border border-gray-700">
+                                <button onclick="quickChangeStatus('${uniqueKey}', 'Ready')" title="Set Ready" class="text-green-400 hover:text-green-300 px-1 text-xs"><i class="fas fa-check-circle"></i></button>
+                                <button onclick="quickChangeStatus('${uniqueKey}', 'Maintenance')" title="Set Maintenance" class="text-yellow-400 hover:text-yellow-300 px-1 text-xs"><i class="fas fa-tools"></i></button>
+                                <button onclick="quickChangeStatus('${uniqueKey}', 'Monitoring')" title="Set Monitoring" class="text-blue-400 hover:text-blue-300 px-1 text-xs"><i class="fas fa-desktop"></i></button>
+                                <button onclick="quickChangeStatus('${uniqueKey}', 'Rusak')" title="Set Rusak" class="text-red-400 hover:text-red-300 px-1 text-xs"><i class="fas fa-times-circle"></i></button>
                             </div>
-                            <button onclick="editDevice(${realIndex})" title="Edit" class="text-blue-400 hover:text-blue-300 ml-1 p-1"><i class="fas fa-edit"></i></button>
-                            <button onclick="requestDeleteDevice(${realIndex})" title="Hapus (Admin Only)" class="text-red-400 hover:text-red-300 p-1"><i class="fas fa-trash"></i></button>
+                            <button onclick="editDevice('${uniqueKey}')" title="Edit" class="text-blue-400 hover:text-blue-300 ml-1 p-1"><i class="fas fa-edit"></i></button>
+                            <button onclick="requestDeleteDevice('${uniqueKey}')" title="Hapus (Admin Only)" class="text-red-400 hover:text-red-300 p-1"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 `;
@@ -677,7 +901,7 @@
             });
         }
 
-        // --- RENDER LOG ---
+        // --- RENDER TABEL LOG ---
         function renderLogs() {
             const tbody = document.getElementById('log-table-body');
             const emptyState = document.getElementById('log-empty-state');
@@ -694,20 +918,21 @@
                 let statusColor = "bg-green-500/20 text-green-400 border-green-500/30";
                 if(log.status === "Maintenance") statusColor = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
                 if(log.status === "Monitoring") statusColor = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+                if(log.status === "Rusak") statusColor = "bg-red-500/20 text-red-400 border-red-500/30";
                 if(log.status === "Delete") statusColor = "bg-red-500/20 text-red-400 border-red-500/30";
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="py-3 px-4 font-mono text-gray-300">${log.date}</td>
-                    <td class="py-3 px-4 font-semibold text-blue-400">${log.type}</td>
-                    <td class="py-3 px-4 font-medium text-white">${log.targetName}</td>
-                    <td class="py-3 px-4 text-gray-400">${log.location}</td>
-                    <td class="py-3 px-4">${log.action}</td>
-                    <td class="py-3 px-4">${log.crew}</td>
-                    <td class="py-3 px-4">
-                        <span class="px-2 py-1 text-xs rounded-md border ${statusColor}">${log.status}</span>
+                    <td class="py-2.5 px-3 font-mono text-gray-300">${log.date}</td>
+                    <td class="py-2.5 px-3 font-semibold text-blue-400">${log.type}</td>
+                    <td class="py-2.5 px-3 font-medium text-white">${log.targetName}</td>
+                    <td class="py-2.5 px-3 text-gray-400">${log.location}</td>
+                    <td class="py-2.5 px-3 text-gray-300 max-w-[200px] truncate" title="${log.action}">${log.action}</td>
+                    <td class="py-2.5 px-3 text-gray-300">${log.crew}</td>
+                    <td class="py-2.5 px-3">
+                        <span class="px-2 py-0.5 text-[11px] rounded-md border ${statusColor}">${log.status}</span>
                     </td>
-                    <td class="py-3 px-4 text-right">
+                    <td class="py-2.5 px-3 text-right">
                         <button onclick="deleteLog(${index})" class="text-red-400 hover:text-red-300 p-1"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
@@ -715,7 +940,7 @@
             });
         }
 
-        // --- EXPORT XLSX ---
+        // --- EXPORT XLSX (Standar SheetJS yang Stabil & Aman) ---
         function exportToXLSX() {
             const targetYear = activeDate.getFullYear();
             const targetMonth = activeDate.getMonth();
@@ -733,18 +958,18 @@
             }
 
             const aoaData = [
-                ["MAINTENANCE & MONITORING"],
+                ["MAINTENANCE & MONITORING - IT BROADCAST 3TV"],
                 [`Periode Bulan: ${activeMonthStr} | Tanggal Cetak: ${getFormattedDate()}`],
                 [],
-                ["ID Alat", "Tanggal", "Nama Perangkat", "Kategori", "Lokasi", "Crew", "Task Detail", "Status"]
+                ["ID Alat", "Tanggal", "Nama Perangkat", "Qty", "Kategori", "Lokasi", "Crew", "Task Detail", "Status"]
             ];
 
-            currentMonthDevices.forEach((dev) => {
-                const realIndex = devices.indexOf(dev);
+            currentMonthDevices.forEach((dev, idx) => {
                 aoaData.push([
-                    `ITB-${(realIndex+1).toString().padStart(3, '0')}`,
+                    `ITB-${(idx+1).toString().padStart(3, '0')}`,
                     dev.date || getFormattedDate(),
                     dev.name || '',
+                    dev.qty || 1,
                     dev.category || '',
                     dev.location || '',
                     dev.crew || '',
@@ -755,60 +980,17 @@
 
             const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
 
-            if (worksheet['A1']) {
-                worksheet['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "2563EB" } } };
-            }
-            if (worksheet['A2']) {
-                worksheet['A2'].s = { font: { italic: true, sz: 10, color: { rgb: "6B7280" } } };
-            }
-
-            worksheet['!autofilter'] = { ref: `A4:H${aoaData.length}` };
-
-            for (let R = 3; R < aoaData.length; ++R) {
-                for (let C = 0; C <= 7; ++C) {
-                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!worksheet[cellAddress]) continue;
-
-                    if (R === 3) {
-                        worksheet[cellAddress].s = {
-                            font: { bold: true, color: { rgb: "FFFFFF" } },
-                            fill: { fgColor: { rgb: "1E293B" } },
-                            alignment: { horizontal: "center", vertical: "center" },
-                            border: {
-                                top: { style: "thin", color: { rgb: "CBD5E1" } },
-                                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
-                                left: { style: "thin", color: { rgb: "CBD5E1" } },
-                                right: { style: "thin", color: { rgb: "CBD5E1" } }
-                            }
-                        };
-                    } else {
-                        let fillBg = "FFFFFF";
-                        let fontColor = "000000";
-                        const statusVal = aoaData[R][7];
-
-                        if (C === 7) {
-                            if (statusVal === "Ready") { fillBg = "DCFCE7"; fontColor = "166534"; }
-                            else if (statusVal === "Maintenance") { fillBg = "FEF9C3"; fontColor = "854D0E"; }
-                            else if (statusVal === "Monitoring") { fillBg = "DBEAFE"; fontColor = "1E40AF"; }
-                        }
-
-                        worksheet[cellAddress].s = {
-                            alignment: { vertical: "center", wrapText: true },
-                            fill: { fgColor: { rgb: fillBg } },
-                            font: { color: { rgb: fontColor } },
-                            border: {
-                                top: { style: "thin", color: { rgb: "E2E8F0" } },
-                                bottom: { style: "thin", color: { rgb: "E2E8F0" } },
-                                left: { style: "thin", color: { rgb: "E2E8F0" } },
-                                right: { style: "thin", color: { rgb: "E2E8F0" } }
-                            }
-                        };
-                    }
-                }
-            }
-
+            // Pengaturan lebar kolom otomatis yang optimal agar tidak terpotong
             worksheet['!cols'] = [
-                { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 18 }, { wch: 20 }, { wch: 18 }, { wch: 35 }, { wch: 15 }
+                { wch: 12 }, // ID Alat
+                { wch: 14 }, // Tanggal
+                { wch: 25 }, // Nama Perangkat
+                { wch: 8 },  // Qty
+                { wch: 18 }, // Kategori
+                { wch: 18 }, // Lokasi
+                { wch: 18 }, // Crew
+                { wch: 35 }, // Task Detail
+                { wch: 15 }  // Status
             ];
 
             const workbook = XLSX.utils.book_new();
@@ -847,12 +1029,12 @@
             doc.text(`Periode Bulan: ${activeMonthStr} | Tanggal Cetak: ${getFormattedDate()}`, 14, 22);
 
             const tableRows = [];
-            currentMonthDevices.forEach((dev) => {
-                const realIndex = devices.indexOf(dev);
+            currentMonthDevices.forEach((dev, idx) => {
                 tableRows.push([
-                    `ITB-${(realIndex+1).toString().padStart(3, '0')}`,
+                    `ITB-${(idx+1).toString().padStart(3, '0')}`,
                     dev.date || getFormattedDate(),
                     dev.name || '',
+                    dev.qty || 1,
                     dev.category || '',
                     dev.location || '',
                     dev.crew || '',
@@ -863,28 +1045,18 @@
 
             doc.autoTable({
                 startY: 26,
-                head: [["ID Alat", "Tanggal", "Nama Perangkat", "Kategori", "Lokasi", "Crew", "Task Detail", "Status"]],
+                head: [["ID Alat", "Tanggal", "Nama Perangkat", "Qty", "Kategori", "Lokasi", "Crew", "Task Detail", "Status"]],
                 body: tableRows,
                 theme: 'grid',
                 headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
-                styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
-                columnStyles: {
-                    0: { cellWidth: 20 },
-                    1: { cellWidth: 25 },
-                    2: { cellWidth: 40 },
-                    3: { cellWidth: 30 },
-                    4: { cellWidth: 35 },
-                    5: { cellWidth: 30 },
-                    6: { cellWidth: 65 },
-                    7: { cellWidth: 25 }
-                }
+                styles: { fontSize: 9, cellPadding: 3, valign: 'middle' }
             });
 
             doc.save(`ITB3TV_DaftarAlat_${activeMonthStr.replace(' ', '_')}.pdf`);
         }
 
         // --- MULTIPLE DEVICE ROWS HANDLING ---
-        function addDeviceRow(nameVal = '', catVal = '') {
+        function addDeviceRow(nameVal = '', qtyVal = 1, catVal = '') {
             const list = document.getElementById('device-rows-list');
             const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
             
@@ -893,17 +1065,18 @@
             div.id = rowId;
             div.innerHTML = `
                 <input type="text" placeholder="Nama Perangkat..." required value="${nameVal}" class="glass-input flex-1 px-3 py-2 rounded-lg text-sm row-name-input">
-                <select required class="glass-input w-40 px-3 py-2 rounded-lg text-sm row-cat-select">
+                <input type="number" placeholder="Qty" min="1" required value="${qtyVal}" class="glass-input w-20 px-3 py-2 rounded-lg text-sm row-qty-input" title="Quantity per item">
+                <select required class="glass-input w-36 px-3 py-2 rounded-lg text-sm row-cat-select">
                     <option value="" disabled ${!catVal ? 'selected' : ''}>Pilih Kategori...</option>
                     <option value="PC Broadcast" ${catVal === 'PC Broadcast' ? 'selected' : ''}>PC Broadcast</option>
                     <option value="Graphics System" ${catVal === 'Graphics System' ? 'selected' : ''}>Graphics System</option>
-                    <option value="Replay Server" ${catVal === 'Replay Server' ? 'selected' : ''}>Replay Server</option>
                     <option value="Video Server" ${catVal === 'Video Server' ? 'selected' : ''}>Video Server</option>
                     <option value="Sound Card" ${catVal === 'Sound Card' ? 'selected' : ''}>Sound Card</option>
                     <option value="Network Switch" ${catVal === 'Network Switch' ? 'selected' : ''}>Network Switch</option>
-                    <option value="IO External" ${catVal === 'IO External' ? 'selected' : ''}>IO External</option>
                     <option value="Server" ${catVal === 'Server' ? 'selected' : ''}>Server</option>
-                    <option value="Non Kategori" ${catVal === 'Non Kategori' ? 'selected' : ''}>Non Kategori</option>
+                    <option value="Mini Switcher" ${catVal === 'Mini Switcher' ? 'selected' : ''}>Mini Switcher</option>
+                    <option value="Alat Record" ${catVal === 'Alat Record' ? 'selected' : ''}>Alat Record</option>
+                    <option value="Lainnya" ${catVal === 'Lainnya' ? 'selected' : ''}>Lainnya</option>
                 </select>
                 <button type="button" onclick="removeDeviceRow('${rowId}')" class="text-red-400 hover:text-red-300 px-2 py-1 text-sm"><i class="fas fa-trash"></i></button>
             `;
@@ -914,24 +1087,22 @@
             const row = document.getElementById(rowId);
             if (row) {
                 const list = document.getElementById('device-rows-list');
-                if (list.children.length > 1) {
-                    row.remove();
-                } else {
-                    alert("Minimal harus ada 1 baris perangkat.");
-                }
+                if (list.children.length > 1) row.remove();
+                else alert("Minimal harus ada 1 baris perangkat.");
             }
         }
 
         // --- DEVICE MODAL HANDLING ---
         function openDeviceModal() {
             document.getElementById('device-form').reset();
-            document.getElementById('device-index').value = '';
+            document.getElementById('device-id').value = '';
             document.getElementById('device-date').value = getFormattedDate();
             document.getElementById('device-modal-title').innerText = "Tambah Perangkat";
             
             document.getElementById('multiple-device-container').classList.remove('hidden');
             document.getElementById('single-device-edit-fields').classList.add('hidden');
             document.getElementById('single-device-name').removeAttribute('required');
+            document.getElementById('single-device-qty').removeAttribute('required');
             document.getElementById('single-device-category').removeAttribute('required');
 
             document.getElementById('device-rows-list').innerHTML = '';
@@ -944,78 +1115,116 @@
             document.getElementById('modal-device').classList.remove('active');
         }
 
-        document.getElementById('device-form').addEventListener('submit', function(e) {
+        document.getElementById('device-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const index = document.getElementById('device-index').value;
+            const deviceId = document.getElementById('device-id').value;
             const dateVal = document.getElementById('device-date').value || getFormattedDate();
             const locationVal = document.getElementById('device-location').value;
             const crewVal = document.getElementById('device-crew').value;
             const statusVal = document.getElementById('device-status').value;
             const taskVal = document.getElementById('device-task').value;
 
-            if (index === '') {
+            if (deviceId === '') {
                 const nameInputs = document.querySelectorAll('.row-name-input');
+                const qtyInputs = document.querySelectorAll('.row-qty-input');
                 const catSelects = document.querySelectorAll('.row-cat-select');
 
                 for (let i = 0; i < nameInputs.length; i++) {
                     const name = nameInputs[i].value.trim();
+                    const qty = parseInt(qtyInputs[i].value) || 1;
                     const category = catSelects[i].value;
                     if (name && category) {
                         const newDev = {
                             date: dateVal,
                             name: name,
+                            qty: qty,
                             category: category,
                             location: locationVal,
                             crew: crewVal,
                             status: statusVal,
                             taskDetail: taskVal
                         };
-                        devices.push(newDev);
-                        maintenanceLogs.unshift({
-                            id: 'LOG-' + Date.now() + '-' + i,
-                            date: dateVal,
-                            type: 'TAMBAH',
-                            targetName: name,
-                            location: locationVal,
-                            action: `Menambahkan perangkat baru (${taskVal})`,
-                            crew: crewVal,
-                            status: statusVal
-                        });
+
+                        if (db) {
+                            await db.collection("itb_devices").add(newDev);
+                            await db.collection("itb_logs").add({
+                                date: dateVal,
+                                type: 'TAMBAH',
+                                targetName: name,
+                                location: locationVal,
+                                action: `Menambahkan perangkat baru Qty: ${qty} (${taskVal})`,
+                                crew: crewVal,
+                                status: statusVal,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        } else {
+                            devices.push(newDev);
+                            maintenanceLogs.unshift({
+                                id: 'LOG-' + Date.now() + '-' + i,
+                                date: dateVal,
+                                type: 'TAMBAH',
+                                targetName: name,
+                                location: locationVal,
+                                action: `Menambahkan perangkat baru Qty: ${qty} (${taskVal})`,
+                                crew: crewVal,
+                                status: statusVal
+                            });
+                        }
                     }
                 }
             } else {
-                const idx = parseInt(index);
+                const qtyVal = parseInt(document.getElementById('single-device-qty').value) || 1;
                 const devData = {
                     date: dateVal,
                     name: document.getElementById('single-device-name').value,
+                    qty: qtyVal,
                     category: document.getElementById('single-device-category').value,
                     location: locationVal,
                     crew: crewVal,
                     status: statusVal,
                     taskDetail: taskVal
                 };
-                devices[idx] = devData;
-                maintenanceLogs.unshift({
-                    id: 'LOG-' + Date.now(),
-                    date: dateVal,
-                    type: 'EDIT',
-                    targetName: devData.name,
-                    location: devData.location,
-                    action: `Memperbarui data perangkat (${taskVal})`,
-                    crew: crewVal,
-                    status: statusVal
-                });
+
+                if (db) {
+                    await db.collection("itb_devices").doc(deviceId).update(devData);
+                    await db.collection("itb_logs").add({
+                        date: dateVal,
+                        type: 'EDIT',
+                        targetName: devData.name,
+                        location: locationVal,
+                        action: `Memperbarui data perangkat Qty: ${qtyVal} (${taskVal})`,
+                        crew: crewVal,
+                        status: statusVal,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    const idx = devices.findIndex(d => (d.id && d.id === deviceId) || devices.indexOf(d) == deviceId);
+                    if (idx !== -1) devices[idx] = devData;
+                    maintenanceLogs.unshift({
+                        id: 'LOG-' + Date.now(),
+                        date: dateVal,
+                        type: 'EDIT',
+                        targetName: devData.name,
+                        location: locationVal,
+                        action: `Memperbarui data perangkat Qty: ${qtyVal} (${taskVal})`,
+                        crew: crewVal,
+                        status: statusVal
+                    });
+                }
             }
             
+            saveToLocalStorage();
             renderDevices();
             renderLogs();
             updateDashboardStats();
             closeDeviceModal();
         });
 
-        function editDevice(index) {
-            const dev = devices[index];
-            document.getElementById('device-index').value = index;
+        function editDevice(uniqueKey) {
+            const dev = devices.find((d, i) => (d.id && d.id === uniqueKey) || i == uniqueKey);
+            if (!dev) return;
+
+            document.getElementById('device-id').value = dev.id || uniqueKey;
             document.getElementById('device-date').value = dev.date || getFormattedDate();
             document.getElementById('device-location').value = dev.location;
             document.getElementById('device-crew').value = dev.crew;
@@ -1025,36 +1234,55 @@
             document.getElementById('multiple-device-container').classList.add('hidden');
             document.getElementById('single-device-edit-fields').classList.remove('hidden');
             document.getElementById('single-device-name').setAttribute('required', 'true');
+            document.getElementById('single-device-qty').setAttribute('required', 'true');
             document.getElementById('single-device-category').setAttribute('required', 'true');
 
             document.getElementById('single-device-name').value = dev.name;
+            document.getElementById('single-device-qty').value = dev.qty || 1;
             document.getElementById('single-device-category').value = dev.category;
 
             document.getElementById('device-modal-title').innerText = "Edit Perangkat";
             document.getElementById('modal-device').classList.add('active');
         }
 
-        function quickChangeStatus(index, newStatus) {
-            const dev = devices[index];
-            dev.status = newStatus;
-            maintenanceLogs.unshift({
-                id: 'LOG-' + Date.now(),
-                date: getFormattedDate(),
-                type: 'STATUS',
-                targetName: dev.name,
-                location: dev.location,
-                action: `Ubah status cepat ke ${newStatus}`,
-                crew: dev.crew,
-                status: newStatus
-            });
+        async function quickChangeStatus(uniqueKey, newStatus) {
+            const dev = devices.find((d, i) => (d.id && d.id === uniqueKey) || i == uniqueKey);
+            if (!dev) return;
+
+            if (db && dev.id) {
+                await db.collection("itb_devices").doc(dev.id).update({ status: newStatus });
+                await db.collection("itb_logs").add({
+                    date: getFormattedDate(),
+                    type: 'STATUS',
+                    targetName: dev.name,
+                    location: dev.location,
+                    action: `Ubah status cepat ke ${newStatus}`,
+                    crew: dev.crew,
+                    status: newStatus,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } else {
+                dev.status = newStatus;
+                maintenanceLogs.unshift({
+                    id: 'LOG-' + Date.now(),
+                    date: getFormattedDate(),
+                    type: 'STATUS',
+                    targetName: dev.name,
+                    location: dev.location,
+                    action: `Ubah status cepat ke ${newStatus}`,
+                    crew: dev.crew,
+                    status: newStatus
+                });
+            }
+            saveToLocalStorage();
             renderDevices();
             renderLogs();
             updateDashboardStats();
         }
 
         // --- ADMIN DELETE AUTH MODAL ---
-        function requestDeleteDevice(index) {
-            document.getElementById('delete-target-index').value = index;
+        function requestDeleteDevice(uniqueKey) {
+            document.getElementById('delete-target-id').value = uniqueKey;
             document.getElementById('delete-admin-password').value = '';
             document.getElementById('delete-auth-error').classList.add('hidden');
             document.getElementById('modal-auth-delete').classList.add('active');
@@ -1067,36 +1295,55 @@
         function handleDeleteAuthLogin(e) {
             e.preventDefault();
             const pass = document.getElementById('delete-admin-password').value;
-            const index = parseInt(document.getElementById('delete-target-index').value);
+            const uniqueKey = document.getElementById('delete-target-id').value;
 
             if (pass === ADMIN_LOG_PASSWORD) {
                 closeDeleteAuthModal();
-                executeDeleteDevice(index);
+                executeDeleteDevice(uniqueKey);
             } else {
                 document.getElementById('delete-auth-error').classList.remove('hidden');
             }
         }
 
-        function executeDeleteDevice(index) {
-            const dev = devices[index];
-            devices.splice(index, 1);
-            maintenanceLogs.unshift({
-                id: 'LOG-' + Date.now(),
-                date: getFormattedDate(),
-                type: 'HAPUS',
-                targetName: dev.name,
-                location: dev.location,
-                action: `Menghapus perangkat dari inventaris (Admin)`,
-                crew: dev.crew,
-                status: 'Delete'
-            });
+        async function executeDeleteDevice(uniqueKey) {
+            const devIndex = devices.findIndex((d, i) => (d.id && d.id === uniqueKey) || i == uniqueKey);
+            if (devIndex === -1) return;
+            const dev = devices[devIndex];
+
+            if (db && dev.id) {
+                await db.collection("itb_devices").doc(dev.id).delete();
+                await db.collection("itb_logs").add({
+                    date: getFormattedDate(),
+                    type: 'HAPUS',
+                    targetName: dev.name,
+                    location: dev.location,
+                    action: `Menghapus perangkat dari inventaris (Admin)`,
+                    crew: dev.crew,
+                    status: 'Delete',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } else {
+                devices.splice(devIndex, 1);
+                maintenanceLogs.unshift({
+                    id: 'LOG-' + Date.now(),
+                    date: getFormattedDate(),
+                    type: 'HAPUS',
+                    targetName: dev.name,
+                    location: dev.location,
+                    action: `Menghapus perangkat dari inventaris (Admin)`,
+                    crew: dev.crew,
+                    status: 'Delete'
+                });
+            }
+            saveToLocalStorage();
             renderDevices();
             renderLogs();
             updateDashboardStats();
         }
 
-        function deleteLog(index) {
+        async function deleteLog(index) {
             maintenanceLogs.splice(index, 1);
+            saveToLocalStorage();
             renderLogs();
         }
 
@@ -1126,25 +1373,13 @@
                     const parsed = JSON.parse(e.target.result);
                     if (parsed.devices && Array.isArray(parsed.devices)) {
                         devices = parsed.devices;
-                        
-                        maintenanceLogs = [];
-                        devices.forEach((dev, idx) => {
-                            maintenanceLogs.push({
-                                id: 'LOG-RESTORE-' + Date.now() + '-' + idx,
-                                date: dev.date || getFormattedDate(),
-                                type: 'RESTORE',
-                                targetName: dev.name,
-                                location: dev.location || 'Local Storage',
-                                action: `Memulihkan perangkat ${dev.name} dari file backup JSON`,
-                                crew: dev.crew || 'Administrator',
-                                status: dev.status || 'Ready'
-                            });
-                        });
+                        maintenanceLogs = parsed.logs || [];
+                        saveToLocalStorage();
 
                         renderDevices();
                         renderLogs();
                         updateDashboardStats();
-                        alert("Data berhasil dipulihkan (Restore) dari file backup!");
+                        alert("Data berhasil dipulihkan (Restore) dari file backup JSON!");
                     } else {
                         alert("Format file JSON backup tidak valid.");
                     }
@@ -1156,10 +1391,17 @@
         }
 
         // Inisialisasi awal
+        loadFromLocalStorage();
         updateMonthLabel();
         renderDevices();
         renderLogs();
         updateDashboardStats();
+
+        // Aktifkan Cloud Sync jika konfigurasi Firestore sudah diisi
+        initFirestoreSync();
+
+        // Muat Live RSS Feed saat halaman dibuka
+        loadLiveRSS();
     </script>
 </body>
 </html>
